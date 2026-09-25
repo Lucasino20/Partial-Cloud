@@ -73,10 +73,10 @@ try:
     cursor_pg = conn_pg.cursor()
     cursor_pg.execute("""
         CREATE TABLE IF NOT EXISTS orders (
-            id SERIAL PRIMARY KEY, user_id INT, restaurant_id INT, total DECIMAL(10,2), status VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            id SERIAL PRIMARY KEY, user_id VARCHAR(50), restaurant_id VARCHAR(50), subtotal DECIMAL(10,2), delivery_fee DECIMAL(10,2), total DECIMAL(10,2), address VARCHAR(255), status VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS order_items (
-            id SERIAL PRIMARY KEY, order_id INT, dish_id INT, quantity INT, price DECIMAL(10,2)
+            id SERIAL PRIMARY KEY, order_id INT, dish_id VARCHAR(50), name VARCHAR(100), quantity INT, price DECIMAL(10,2), qty INT
         );
     """)
     cursor_pg.execute("SELECT COUNT(*) FROM orders")
@@ -86,21 +86,25 @@ try:
         items_data = []
         for i in range(10000):
             o_id = i + 1
-            user_id = random.randint(1, 5000)
-            rest_id = random.randint(1, 100)
-            total = round(random.uniform(20.0, 500.0), 2)
+            user_id = str(random.randint(1, 5000))
+            rest_id = str(random.randint(1, 100))
+            subtotal = round(random.uniform(20.0, 500.0), 2)
+            delivery_fee = 5.0
+            total = subtotal + delivery_fee
+            address = fake.street_address()
             status = random.choice(["ENTREGADO", "EN_PREPARACION", "CANCELADO", "EN_CAMINO"])
-            orders_data.append((o_id, user_id, rest_id, total, status))
+            orders_data.append((o_id, user_id, rest_id, subtotal, delivery_fee, total, address, status))
             
             # Add 2 items per order on average (20,000 total items)
             for _ in range(random.randint(1, 3)):
-                dish_id = random.randint(1, 10)
+                dish_id = str(random.randint(1, 10))
+                name = fake.catch_phrase()
                 qty = random.randint(1, 4)
                 price = round(random.uniform(10.0, 50.0), 2)
-                items_data.append((o_id, dish_id, qty, price))
+                items_data.append((o_id, dish_id, name, qty, price, qty))
                 
-        cursor_pg.executemany("INSERT INTO orders (id, user_id, restaurant_id, total, status) VALUES (%s, %s, %s, %s, %s)", orders_data)
-        cursor_pg.executemany("INSERT INTO order_items (order_id, dish_id, quantity, price) VALUES (%s, %s, %s, %s)", items_data)
+        cursor_pg.executemany("INSERT INTO orders (id, user_id, restaurant_id, subtotal, delivery_fee, total, address, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", orders_data)
+        cursor_pg.executemany("INSERT INTO order_items (order_id, dish_id, name, quantity, price, qty) VALUES (%s, %s, %s, %s, %s, %s)", items_data)
         conn_pg.commit()
         print("✅ 10,000 pedidos y múltiples items insertados en PostgreSQL")
     else:

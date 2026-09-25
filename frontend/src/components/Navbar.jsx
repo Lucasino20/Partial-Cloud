@@ -13,8 +13,9 @@ const Navbar = ({ user, onLogout }) => {
         <Link to="/restaurantes">Restaurantes</Link>
         <Link to="/pedidos">Mis Pedidos</Link>
         <Link to="/dashboard">Dashboard</Link>
-        <Link to="/admin" style={{color: '#3b82f6'}}>Admin Panel</Link>
-        <Link to="/docs" style={{color: '#10b981', fontWeight: 'bold'}}>Ver APIs (Swagger)</Link>
+        {user.rol === 'admin' && (
+          <Link to="/admin" style={{color: '#3b82f6'}}>Admin Panel</Link>
+        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span style={{ color: 'var(--text-secondary)' }}>Hola, {user.nombre}</span>

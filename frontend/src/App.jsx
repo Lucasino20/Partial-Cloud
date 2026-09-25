@@ -35,7 +35,7 @@ function App() {
         <Route path="/restaurantes" element={user ? <Restaurantes /> : <Navigate to="/" />} />
         <Route path="/pedidos" element={user ? <Pedidos user={user} /> : <Navigate to="/" />} />
         <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/" />} />
-        <Route path="/admin" element={user ? <Admin /> : <Navigate to="/" />} />
+        <Route path="/admin" element={user?.rol === 'admin' ? <Admin /> : <Navigate to="/" />} />
         <Route path="/docs" element={user ? <Docs /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
