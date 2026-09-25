@@ -192,3 +192,4 @@ graph TD
 
 
 Link de Video : https://drive.google.com/drive/u/1/folders/13oSyAf6smcd9Hjt-crnwgAf3TpxlkHMP
+Link del Frontend : https://main.d1sge6lztilopg.amplifyapp.com/
