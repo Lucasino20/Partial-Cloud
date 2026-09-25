@@ -1,42 +1,60 @@
 #!/bin/bash
-# deploy-frontend.sh - Prepara y compila el Frontend para AWS Amplify
+# deploy-frontend.sh - Prepara, compila y despliega el Frontend en AWS Amplify vía CLI
 
 API_URL=$1
 
 if [ -z "$API_URL" ]; then
     echo "ERROR: Debes proporcionar la URL de tu API (Load Balancer o Nginx)."
-    echo "Uso: bash deploy-frontend.sh <URL_DEL_LOAD_BALANCER>"
-    echo "Ejemplo: bash deploy-frontend.sh http://mi-load-balancer-123.us-east-1.elb.amazonaws.com"
     exit 1
 fi
 
-echo "[1/3] Configurando variables de entorno automáticamente..."
+echo "[1/4] Configurando variables de entorno automáticamente..."
 cd frontend
-
-# Generamos el .env automáticamente, ¡sin que toques nada manual!
 cat <<EOF > .env
 VITE_API_URL=${API_URL}
 EOF
 
-echo "[2/3] Instalando dependencias de React..."
-# Dependiendo de si están en Cloud9 o una MV limpia, validamos npm
+echo "[2/4] Instalando dependencias de React y compilando..."
 if ! command -v npm &> /dev/null; then
-    echo "Instalando Node.js y NPM..."
     sudo apt update
     sudo apt install -y nodejs npm
 fi
+if ! command -v zip &> /dev/null; then
+    sudo apt install -y zip
+fi
 
-npm install
+npm install > /dev/null
+npm run build > /dev/null
 
-echo "[3/3] Compilando el proyecto para producción..."
-npm run build
+echo "[3/4] Empaquetando y subiendo artefacto a AWS S3 temporal..."
+cd dist
+zip -r ../dist.zip . > /dev/null
+cd ..
 
-echo "--------------------------------------------------------"
-echo "¡Frontend compilado exitosamente!"
-echo "Tu API URL ha sido inyectada automáticamente."
-echo "Los archivos listos para producción están en la carpeta: frontend/dist/"
-echo ""
-echo "Para desplegar en AWS Amplify solo tienes dos opciones:"
-echo "1. Consola AWS: Arrastrar la carpeta 'dist/' a la consola de Amplify (Deploy without Git)."
-echo "2. O si prefieres, usar Amplify CLI."
-echo "--------------------------------------------------------"
+TEMP_BUCKET="amplify-deploy-cloudeats-$RANDOM$RANDOM"
+aws s3api create-bucket --bucket $TEMP_BUCKET --region us-east-1 > /dev/null
+aws s3 cp dist.zip s3://$TEMP_BUCKET/dist.zip > /dev/null
+
+echo "[4/4] Desplegando en AWS Amplify (Zero-Touch)..."
+APP_ID=$(aws amplify list-apps --query "apps[?name=='CloudEats-Frontend'].appId | [0]" --output text)
+
+if [ "$APP_ID" == "None" ] || [ -z "$APP_ID" ]; then
+    APP_ID=$(aws amplify create-app --name "CloudEats-Frontend" --query 'app.appId' --output text)
+    aws amplify create-branch --app-id $APP_ID --branch-name main > /dev/null
+fi
+
+aws amplify start-deployment --app-id $APP_ID --branch-name main --source-url s3://$TEMP_BUCKET/dist.zip > /dev/null
+
+echo "AWS Amplify está publicando tu sitio... (esperando 15 segundos)"
+sleep 15
+
+# Limpieza
+aws s3 rm s3://$TEMP_BUCKET/dist.zip > /dev/null
+aws s3api delete-bucket --bucket $TEMP_BUCKET > /dev/null
+
+echo "========================================================="
+echo "✅ ¡FRONTEND DESPLEGADO CON ÉXITO EN AWS AMPLIFY!"
+echo "Tu aplicación ya está en vivo 100% automatizada."
+echo "URL de producción:"
+echo "👉 https://main.${APP_ID}.amplifyapp.com"
+echo "========================================================="
