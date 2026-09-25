@@ -1,40 +1,24 @@
+
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Pizza, Home, BarChart3, Store, Users, ShoppingBag } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
-const Navbar = () => {
-  const location = useLocation();
-  
-  const isActive = (path) => location.pathname === path ? 'active' : '';
-
+const Navbar = ({ user, onLogout }) => {
+  const nav = useNavigate();
   return (
-    <nav className="glass">
-      <div className="container flex-between navbar">
-        <Link to="/" className="nav-brand">
-          <Pizza size={32} />
-          <span>CloudEats</span>
-        </Link>
-        
-        <div className="nav-links">
-          <Link to="/" className={`nav-link ${isActive('/')}`} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-            <Home size={20} /> Inicio
-          </Link>
-          <Link to="/restaurantes" className={`nav-link ${isActive('/restaurantes')}`} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-            <Store size={20} /> Restaurantes
-          </Link>
-          <Link to="/pedidos" className={`nav-link ${isActive('/pedidos')}`} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-            <ShoppingBag size={20} /> Pedidos
-          </Link>
-          <Link to="/dashboard" className={`nav-link ${isActive('/dashboard')}`} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-            <BarChart3 size={20} /> Analítica
-          </Link>
-          <Link to="/usuarios" className="btn btn-primary btn-sm" style={{marginLeft: '12px'}}>
-            Usuarios / Login
-          </Link>
-        </div>
+    <nav className="navbar">
+      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary-color)' }}>
+        CloudEats 🍕
+      </div>
+      <div className="nav-links">
+        <Link to="/restaurantes">Restaurantes</Link>
+        <Link to="/pedidos">Mis Pedidos</Link>
+        <Link to="/dashboard">Dashboard</Link>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <span style={{ color: 'var(--text-secondary)' }}>Hola, {user.nombre}</span>
+        <button className="btn btn-outline" style={{ padding: '8px 16px' }} onClick={() => { onLogout(); nav('/'); }}>Salir</button>
       </div>
     </nav>
   );
 };
-
 export default Navbar;

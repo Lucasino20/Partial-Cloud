@@ -1,84 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, Users, ShoppingBag, DollarSign } from 'lucide-react';
-import { fetchDashboard, fetchPlatosPopulares, fetchVentasMensuales, fetchHealthHistorial } from '../api';
 
-const Dashboard = () => {
-  const [dashboardData, setDashboardData] = useState(null);
-  const [platos, setPlatos] = useState([]);
-  const [ventas, setVentas] = useState([]);
-  const [historialHealth, setHistorialHealth] = useState('');
+import React, { useState, useEffect } from 'react';
+import { fetchDashboard, fetchPlatosPopulares } from '../api';
+
+const Dashboard = ({ user }) => {
+  const [data, setData] = useState(null);
+  const [athena, setAthena] = useState([]);
 
   useEffect(() => {
-    // Invocando endpoints de ms-historial y ms-consultas
-    fetchHealthHistorial().then(res => setHistorialHealth(res.status)).catch(e => console.error(e));
-    
-    // UserId hardcodeado para la demo
-    fetchDashboard(1).then(data => setDashboardData(data)).catch(e => console.error(e));
-    
-    // Consultas a Athena
-    fetchPlatosPopulares(5).then(data => setPlatos(data)).catch(e => console.error(e));
-    fetchVentasMensuales().then(data => setVentas(data)).catch(e => console.error(e));
-  }, []);
+    fetchDashboard(user.id).then(d => setData(d)).catch(e=>console.log(e));
+    fetchPlatosPopulares(3).then(d => setAthena(d.data || d)).catch(e=>console.log(e));
+  }, [user.id]);
+
+  if(!data) return <div className="container">Cargando dashboard...</div>;
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '40px 1.5rem' }}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-        <h1 className="section-title">Dashboard Analítico</h1>
-        <span style={{ fontSize: '0.8rem', color: historialHealth === 'UP' ? 'green' : 'red' }}>
-          ms-historial: {historialHealth || 'Cargando...'}
-        </span>
-      </div>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-        Métricas generales consumidas de ms-consultas (Athena) y ms-historial.
-      </p>
+    <div className="container animate-fade-in">
+      <h1>Dashboard Consolidado (Historial + Athena)</h1>
+      <p style={{marginBottom: '32px'}}>Este panel consume el Agregador de Go y AWS Athena Data Analytics.</p>
 
-      <div className="grid-responsive" style={{ marginBottom: '40px' }}>
-        <div className="stat-card">
-          <div className="stat-icon">
-            <ShoppingBag size={28} />
-          </div>
-          <div>
-            <div className="stat-value">{dashboardData ? dashboardData.pedidos_totales : '...'}</div>
-            <div className="stat-label">Pedidos Históricos</div>
-          </div>
+      <div className="grid-responsive">
+        <div className="glass-panel">
+          <h2 style={{color:'var(--primary-color)'}}>Mi Resumen</h2>
+          <p><b>Nombre:</b> {data.usuario?.nombre} {data.usuario?.apellido}</p>
+          <p><b>Email:</b> {data.usuario?.email}</p>
+          <hr style={{border:'0', borderTop:'1px solid var(--border-color)', margin:'16px 0'}} />
+          <h3>Restaurante Favorito</h3>
+          {data.restaurante_favorito ? (
+            <p>{data.restaurante_favorito.nombre} ({data.restaurante_favorito.distrito}) - ⭐ {data.restaurante_favorito.calificacion}</p>
+          ) : <p>No hay favorito</p>}
         </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#FEF3C7', color: '#D97706' }}>
-            <TrendingUp size={28} />
-          </div>
-          <div>
-            <div className="stat-value" style={{fontSize: '1.2rem'}}>{dashboardData?.favorito?.nombre || '...'}</div>
-            <div className="stat-label">Restaurante Favorito</div>
-          </div>
-        </div>
-      </div>
 
-      <h2 className="section-title" style={{ fontSize: '1.5rem' }}>Platos Más Vendidos (Athena)</h2>
-      <div className="card">
-        {platos.length === 0 ? <p>Cargando datos analíticos...</p> : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #eee' }}>
-                <th style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>Plato</th>
-                <th style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>Restaurante</th>
-                <th style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>Total Pedidos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {platos.map((p, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '16px' }}>{p.nombre_plato}</td>
-                  <td style={{ padding: '16px' }}>{p.restaurante}</td>
-                  <td style={{ padding: '16px', fontWeight: '600' }}>{p.cantidad}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <div className="glass-panel">
+          <h2 style={{color:'#3b82f6'}}>Top Platos (AWS Athena)</h2>
+          <p style={{fontSize:'0.9rem', marginBottom:'16px'}}>Reporte de Big Data generado desde S3 via Glue Data Catalog.</p>
+          {athena && athena.length > 0 ? athena.map((row, i) => (
+             <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border-color)'}}>
+               <span>{row.dish_name || 'Desconocido'}</span>
+               <span style={{fontWeight:'bold'}}>{row.total_vendidos || 0} ventas</span>
+             </div>
+          )) : <p>Cargando modelo analítico...</p>}
+        </div>
       </div>
     </div>
   );
 };
-
 export default Dashboard;

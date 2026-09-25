@@ -99,6 +99,7 @@ echo "[7/8] Configurando API Gateway (HTTPS Público) con VPC Link..."
 VPC_LINK_ID=$(aws apigatewayv2 create-vpc-link --name cloudeats-vpc-link --subnet-ids $SUBNET_1 $SUBNET_2 --security-group-ids $SG_ALB --query 'VpcLinkId' --output text)
 
 API_ID=$(aws apigatewayv2 create-api --name "CloudEats-API" --protocol-type HTTP --query 'ApiId' --output text)
+aws apigatewayv2 update-api --api-id $API_ID --cors-configuration AllowOrigins="*",AllowMethods="*",AllowHeaders="*" >/dev/null
 INTEGRATION_ID=$(aws apigatewayv2 create-integration --api-id $API_ID --integration-type HTTP_PROXY --integration-uri $LISTENER_ARN --connection-type VPC_LINK --connection-id $VPC_LINK_ID --integration-method ANY --payload-format-version 1.0 --query 'IntegrationId' --output text)
 
 aws apigatewayv2 create-route --api-id $API_ID --route-key "ANY /{proxy+}" --target "integrations/$INTEGRATION_ID" >/dev/null

@@ -1,25 +1,40 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
+import Login from './pages/Login';
 import Restaurantes from './pages/Restaurantes';
+import Pedidos from './pages/Pedidos';
 import Dashboard from './pages/Dashboard';
-import UsersOrders from './pages/UsersOrders';
-import OrdersPage from './pages/OrdersPage';
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("cloudeats_user");
+    if(saved) setUser(JSON.parse(saved));
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem("cloudeats_user", JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("cloudeats_user");
+  };
+
   return (
     <BrowserRouter>
-      <Navbar />
+      {user && <Navbar user={user} onLogout={handleLogout} />}
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/restaurantes" element={<Restaurantes />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/usuarios" element={<UsersOrders />} />
-        <Route path="/pedidos" element={<OrdersPage />} />
+        <Route path="/" element={!user ? <Login onLogin={handleLogin} /> : <Navigate to="/restaurantes" />} />
+        <Route path="/restaurantes" element={user ? <Restaurantes /> : <Navigate to="/" />} />
+        <Route path="/pedidos" element={user ? <Pedidos user={user} /> : <Navigate to="/" />} />
+        <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
 export default App;
