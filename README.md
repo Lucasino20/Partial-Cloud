@@ -82,58 +82,38 @@ La siguiente lista corresponde a las rutas implementadas actualmente en el códi
 
 ## Guía de Despliegue en AWS Academy
 
-Para este proyecto levantarás Máquinas Virtuales (MVs) en AWS EC2 usando la AMI **`Cloud9Ubuntu22`**. No tienes que modificar código; simplemente clona el repositorio y ejecuta los scripts de bash proporcionados.
+Existen dos opciones de despliegue, dependiendo de tu preferencia. **En ninguna opción necesitas crear archivos `.env` a mano, los scripts los auto-generan.**
 
-### Paso 1: MV Bases de Datos (Privada)
-1. Crea la instancia y asígnale su Security Group (ver reglas abajo).
-2. Clona este repositorio y entra a la carpeta: `cd mv-categorias`
-3. Ejecuta el script de despliegue:
+### Opción A: Despliegue 100% Automatizado ("Zero-Touch")
+Si cuentas con AWS CLI configurado (por ejemplo, desde AWS Cloud9) y deseas que todo se arme solo sin usar SSH:
+1. Asegúrate de tener permisos básicos en AWS Academy.
+2. Ejecuta el script maestro pasándole la URL de tu repo y el nombre de tu S3 Bucket:
    ```bash
-   bash deploy-dbs.sh
+   bash deploy-aws-infra.sh https://github.com/TU_USUARIO/mv-categorias.git mi-bucket-cloudeats-123
    ```
-   *Este script instalará Docker automáticamente y levantará los contenedores de Postgres, MySQL y MongoDB.*
+3. **El script hará la magia:** 
+   - Creará los Security Groups con sus reglas exactas.
+   - Lanzará las MVs de BBDD, Backend e Ingesta inyectándoles `UserData` para que se instalen solas.
+   - Creará el Load Balancer y enlazarás las instancias Backend.
+   - Auto-inyectará **más de 35,000 registros de Fake Data**.
+   - Compilará tu código React inyectándole el Load Balancer final.
+4. Sube la carpeta compilada `frontend/dist/` a AWS Amplify (Drag & Drop).
 
-### Paso 2: MVs Producción Backend (Repetir en 2 máquinas distintas)
-1. Crea las dos instancias EC2 que irán detrás del Balanceador de Carga.
-2. En cada máquina, clona el repositorio y entra a la carpeta: `cd mv-categorias`
-3. Ejecuta el script de despliegue pasando la IP Privada de la MV de Bases de Datos como parámetro:
-   ```bash
-   bash deploy-apps.sh <IP_PRIVADA_MV_BBDD>
-   ```
-   *Ejemplo: `bash deploy-apps.sh 172.31.10.5`*
-   *El script configurará las variables de entorno, instalará Docker y levantará Nginx junto con los 5 microservicios.*
-
-### Paso 3: AWS Amplify (Frontend)
-1. Ve a la consola de AWS Amplify y conecta la rama `setup-parcial` de tu GitHub, apuntando a la carpeta raíz `frontend/`.
-2. En las configuraciones de Amplify, añade una variable de entorno:
-   - `VITE_API_URL` = El DNS público de tu Load Balancer (Ej: `http://mi-loadbalancer-123.us-east-1.elb.amazonaws.com`).
-
-### Paso 4: MV Ingesta (Data Science)
-1. Crea la instancia en EC2.
-2. Clona el repositorio y ejecuta:
-   ```bash
-   bash deploy-ingesta.sh
-   ```
+### Opción B: Despliegue Paso a Paso por Consola
+Si prefieres levantar tú mismo las instancias EC2 en la consola de AWS (usando AMI Cloud9Ubuntu22):
+1. **Bases de Datos:** Entra por SSH a tu MV-BBDD y corre `bash deploy-dbs.sh`.
+2. **Backend (x2):** Entra por SSH a tus MVs y corre `bash deploy-apps.sh <IP_BBDD>`. *(Esto también auto-generará 35,000+ fake records).*
+3. **Data Science:** Entra a la MV-Ingesta y corre `bash deploy-ingesta.sh <IP_BBDD> <BUCKET_S3>`. *(Este script extraerá la data y auto-configurará **AWS Glue** y **Athena**).*
+4. **Frontend:** Corre localmente `bash deploy-frontend.sh <URL_DEL_LOAD_BALANCER>` y sube el compilado a Amplify.
 
 ---
 
-## Security Groups (Reglas de Acceso Inbound)
+## Mantenimiento y Actualización Remota (AWS SSM)
 
-Para que la arquitectura funcione de manera segura y sin bloqueos de firewall en AWS, debes abrir exactamente estos puertos en la consola de EC2:
-
-#### 1. Security Group: "SG-MV-BBDD" (MV Bases de Datos)
-- **SSH (22)**: Desde tu IP personal (para entrar a correr el script).
-- **PostgreSQL (5432)**: Desde el SG de MVs-Backend y SG de MV-Ingesta.
-- **MySQL (3306)**: Desde el SG de MVs-Backend y SG de MV-Ingesta.
-- **MongoDB (27017)**: Desde el SG de MVs-Backend y SG de MV-Ingesta.
-
-#### 2. Security Group: "SG-MV-Backend" (MVs de Producción)
-- **SSH (22)**: Desde tu IP personal.
-- **HTTP (80)**: Desde el Security Group del Load Balancer. 
-
-#### 3. Security Group: "SG-LoadBalancer" (Balanceador de Carga)
-- **HTTP (80)**: Desde cualquier lugar (`0.0.0.0/0`).
-
-#### 4. Security Group: "SG-MV-Ingesta" (Máquina de Data Science)
-- **SSH (22)**: Desde tu IP personal.
-- *(Solo requiere salida a internet, no necesita recibir tráfico de otros servicios).*
+Si en el futuro modificas código del Frontend, Backend, Ingesta o Athena, **no necesitas conectarte por SSH a las MVs** para actualizarlo. Hemos automatizado esto usando AWS Systems Manager.
+1. Haz un `git push` de tus cambios a GitHub.
+2. Desde tu terminal local o Cloud9, ejecuta:
+   ```bash
+   bash update-infrastructure.sh
+   ```
+Este script actualizará remotamente el código en todas las instancias EC2, reconstruirá los contenedores de Docker (Zero-Downtime), actualizará las consultas de Athena e incluso recompilará tu frontend automáticamente.
