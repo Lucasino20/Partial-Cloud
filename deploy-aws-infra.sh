@@ -21,25 +21,35 @@ SUBNETS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --quer
 SUBNET_1=$(echo $SUBNETS | awk '{print $1}')
 SUBNET_2=$(echo $SUBNETS | awk '{print $2}')
 
-echo "[2/7] Creando Security Groups y Firewall..."
-SG_BBDD=$(aws ec2 create-security-group --group-name SG-MV-BBDD-Final --description "SG BBDD" --vpc-id $VPC_ID --query 'GroupId' --output text)
-SG_BACK=$(aws ec2 create-security-group --group-name SG-MV-Backend-Final --description "SG Backend" --vpc-id $VPC_ID --query 'GroupId' --output text)
-SG_INGE=$(aws ec2 create-security-group --group-name SG-MV-Ingesta-Final --description "SG Ingesta" --vpc-id $VPC_ID --query 'GroupId' --output text)
-SG_ALB=$(aws ec2 create-security-group --group-name SG-ALB-Final --description "SG ALB" --vpc-id $VPC_ID --query 'GroupId' --output text)
+echo "[2/7] Configurando Security Groups y Firewall..."
+get_or_create_sg() {
+    local SG_NAME=$1
+    local DESC=$2
+    local ID=$(aws ec2 describe-security-groups --filters Name=group-name,Values=$SG_NAME Name=vpc-id,Values=$VPC_ID --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null)
+    if [ "$ID" == "None" ] || [ -z "$ID" ]; then
+        ID=$(aws ec2 create-security-group --group-name $SG_NAME --description "$DESC" --vpc-id $VPC_ID --query 'GroupId' --output text)
+    fi
+    echo $ID
+}
+
+SG_BBDD=$(get_or_create_sg "SG-MV-BBDD-Final" "SG BBDD")
+SG_BACK=$(get_or_create_sg "SG-MV-Backend-Final" "SG Backend")
+SG_INGE=$(get_or_create_sg "SG-MV-Ingesta-Final" "SG Ingesta")
+SG_ALB=$(get_or_create_sg "SG-ALB-Final" "SG ALB")
 
 sleep 3
 
-# Reglas
-aws ec2 authorize-security-group-ingress --group-id $SG_ALB --protocol tcp --port 80 --cidr 0.0.0.0/0 >/dev/null
-aws ec2 authorize-security-group-ingress --group-id $SG_BACK --protocol tcp --port 22 --cidr 0.0.0.0/0 >/dev/null
-aws ec2 authorize-security-group-ingress --group-id $SG_BACK --protocol tcp --port 80 --source-group $SG_ALB >/dev/null
+# Reglas (ignoramos error si ya existen)
+aws ec2 authorize-security-group-ingress --group-id $SG_ALB --protocol tcp --port 80 --cidr 0.0.0.0/0 >/dev/null 2>&1 || true
+aws ec2 authorize-security-group-ingress --group-id $SG_BACK --protocol tcp --port 22 --cidr 0.0.0.0/0 >/dev/null 2>&1 || true
+aws ec2 authorize-security-group-ingress --group-id $SG_BACK --protocol tcp --port 80 --source-group $SG_ALB >/dev/null 2>&1 || true
 
-aws ec2 authorize-security-group-ingress --group-id $SG_BBDD --protocol tcp --port 22 --cidr 0.0.0.0/0 >/dev/null
+aws ec2 authorize-security-group-ingress --group-id $SG_BBDD --protocol tcp --port 22 --cidr 0.0.0.0/0 >/dev/null 2>&1 || true
 for port in 5432 3306 27017; do
-    aws ec2 authorize-security-group-ingress --group-id $SG_BBDD --protocol tcp --port $port --source-group $SG_BACK >/dev/null
-    aws ec2 authorize-security-group-ingress --group-id $SG_BBDD --protocol tcp --port $port --source-group $SG_INGE >/dev/null
+    aws ec2 authorize-security-group-ingress --group-id $SG_BBDD --protocol tcp --port $port --source-group $SG_BACK >/dev/null 2>&1 || true
+    aws ec2 authorize-security-group-ingress --group-id $SG_BBDD --protocol tcp --port $port --source-group $SG_INGE >/dev/null 2>&1 || true
 done
-aws ec2 authorize-security-group-ingress --group-id $SG_INGE --protocol tcp --port 22 --cidr 0.0.0.0/0 >/dev/null
+aws ec2 authorize-security-group-ingress --group-id $SG_INGE --protocol tcp --port 22 --cidr 0.0.0.0/0 >/dev/null 2>&1 || true
 
 echo "[3/7] Buscando AMI Ubuntu..."
 AMI_ID=$(aws ec2 describe-images --filters "Name=name,Values=*Cloud9Ubuntu22*" "Name=state,Values=available" --query "Images[0].ImageId" --output text)
