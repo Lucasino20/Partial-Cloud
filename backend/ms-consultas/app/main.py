@@ -97,23 +97,15 @@ def obtener_platos_populares(limit: int = Query(default=10, ge=1, le=50)):
     """
     query = f"""
     SELECT 
-        u.distrito,
-        p.nombre_plato,
-        CASE 
-            WHEN u.edad BETWEEN 18 AND 24 THEN '18-24'
-            WHEN u.edad BETWEEN 25 AND 34 THEN '25-34'
-            WHEN u.edad BETWEEN 35 AND 44 THEN '35-44'
-            ELSE '45+' 
-        END AS rango_edad,
-        COUNT(p.id) AS total_ventas
-    FROM pedidos_db.pedidos p
-    JOIN usuarios_db.usuarios u ON p.usuario_id = u.id
-    GROUP BY 1, 2, 3
+        name AS plato,
+        SUM(quantity) AS total_ventas
+    FROM cloudeats_glue_db.order_items
+    GROUP BY 1
     ORDER BY total_ventas DESC
     LIMIT {limit};
     """
     return {
-        "reporte": "Estadistica de Platos mas vendidos por Distrito y Rango de Edad",
+        "reporte": "Estadistica de Platos mas vendidos",
         "data": run_athena_query(query)
     }
 
@@ -124,10 +116,10 @@ def obtener_ventas_mensuales():
     """
     query = """
     SELECT 
-        date_format(fecha, '%Y-%m') AS mes,
+        substr(created_at, 1, 7) AS mes,
         SUM(total) AS total_recaudado,
         COUNT(id) AS cantidad_pedidos
-    FROM pedidos_db.pedidos
+    FROM cloudeats_glue_db.pedidos
     GROUP BY 1
     ORDER BY mes DESC;
     """
