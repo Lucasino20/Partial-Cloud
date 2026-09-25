@@ -43,7 +43,10 @@ if [ "$APP_ID" == "None" ] || [ -z "$APP_ID" ]; then
     aws amplify create-branch --app-id $APP_ID --branch-name main > /dev/null
 fi
 
-aws amplify start-deployment --app-id $APP_ID --branch-name main --source-url s3://$TEMP_BUCKET/dist.zip > /dev/null
+# Generamos una URL firmada (Presigned URL) para evitar errores de permisos "UnauthorizedException"
+PRESIGNED_URL=$(aws s3 presign s3://$TEMP_BUCKET/dist.zip --expires-in 600)
+
+aws amplify start-deployment --app-id $APP_ID --branch-name main --source-url "$PRESIGNED_URL" > /dev/null
 
 echo "AWS Amplify está publicando tu sitio... (esperando 15 segundos)"
 sleep 15
