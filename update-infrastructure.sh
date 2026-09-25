@@ -23,7 +23,7 @@ INGESTA_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=MV-Inges
 
 if [ -n "$INGESTA_ID" ] && [ "$INGESTA_ID" != "None" ]; then
     aws ssm send-command --instance-ids $INGESTA_ID --document-name "AWS-RunShellScript" \
-        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git pull", "DB_IP=\$(grep DB_IP data-science/.env | cut -d \\"=\\" -f2)", "sudo docker run --rm -v /home/ubuntu/app/backend/scripts:/scripts -w /scripts -e DB_HOST=\$DB_IP python:3.10-slim bash -c \"pip install faker psycopg2-binary mysql-connector-python pymongo && python seed_fake_data.py\"", "S3_B=\$(grep S3_BUCKET data-science/.env | cut -d \\"=\\" -f2)", "aws s3 rm s3://\$S3_B/raw/ --recursive", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate"]' > /dev/null
+        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git pull", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate"]' > /dev/null
     echo "✅ Comando de actualización enviado a la Ingesta ($INGESTA_ID)"
 else
     echo "⚠️ No se encontró la instancia de Ingesta."

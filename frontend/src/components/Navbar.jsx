@@ -18,7 +18,12 @@ const Navbar = ({ user, onLogout }) => {
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <span style={{ color: 'var(--text-secondary)' }}>Hola, {user.nombre}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Hola, {user.nombre}</span>
+          <span style={{ background: 'var(--primary-color)', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase' }}>
+            {user.role || 'CLIENTE'}
+          </span>
+        </div>
         <button className="btn btn-outline" style={{ padding: '8px 16px' }} onClick={() => { onLogout(); nav('/'); }}>Salir</button>
       </div>
     </nav>

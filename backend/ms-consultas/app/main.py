@@ -79,13 +79,8 @@ def run_athena_query(query: str):
         return parsed_data
 
     except Exception as e:
-        # MOCK FALLBACK: Retorna datos de prueba en desarrollo si no hay conexion/credenciales de AWS
-        print(f"Advertencia: No se pudo conectar con AWS Athena ({str(e)}). Devolviendo datos Mock de prueba.")
-        return [
-            {"distrito": "Miraflores", "plato": "Lomo Saltado", "rango_edad": "25-34", "total_ventas": "1420"},
-            {"distrito": "San Isidro", "plato": "Ceviche Clasico", "rango_edad": "35-44", "total_ventas": "980"},
-            {"distrito": "Surco", "plato": "Pollo a la Brasa", "rango_edad": "18-24", "total_ventas": "850"}
-        ]
+        print(f"Advertencia: No se pudo conectar con AWS Athena ({str(e)}).")
+        return []
 
 @app.get("/health")
 def health_check():
