@@ -28,9 +28,9 @@ def main():
         
         conn.close()
         
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        file_orders = f"orders_{timestamp}.csv"
-        file_items = f"order_items_{timestamp}.csv"
+        # Usar nombres fijos para sobreescribir archivos antiguos en S3
+        file_orders = "orders.csv"
+        file_items = "order_items.csv"
         
         df_orders.to_csv(file_orders, index=False)
         df_items.to_csv(file_items, index=False)

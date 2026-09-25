@@ -22,7 +22,7 @@ def main():
         df = pd.read_sql(query, conn)
         conn.close()
         
-        filename = f"usuarios_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+        filename = "usuarios.csv"
         df.to_csv(filename, index=False)
         print(f"Extraídos {len(df)} registros. Guardado en {filename}")
         

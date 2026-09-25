@@ -24,7 +24,7 @@ INGESTA_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=MV-Inges
 
 if [ -n "$INGESTA_ID" ] && [ "$INGESTA_ID" != "None" ]; then
     aws ssm send-command --instance-ids $INGESTA_ID --document-name "AWS-RunShellScript" \
-        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git pull", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate"]' > /dev/null
+        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git pull", "S3_B=\$(grep S3_BUCKET data-science/.env | cut -d \\"=\\" -f2)", "aws s3 rm s3://\$S3_B/raw/ --recursive", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate"]' > /dev/null
     echo "✅ Comando de actualización enviado a la Ingesta ($INGESTA_ID)"
 else
     echo "⚠️ No se encontró la instancia de Ingesta."
@@ -33,6 +33,11 @@ fi
 echo "[3/4] Recreando vistas en Athena (si hubo cambios en Data Science)..."
 if [ -f "data-science/setup_athena.py" ]; then
     source data-science/venv/bin/activate 2>/dev/null || true
+    S3_B=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'cloudeats')].Name" --output text | awk '{print $1}')
+    if [ -z "$S3_B" ] || [ "$S3_B" == "None" ]; then
+        S3_B="cloudeats-datalake-lucas2026"
+    fi
+    export S3_BUCKET=$S3_B
     python3 data-science/setup_athena.py
 else
     echo "⚠️ Script de Athena no encontrado localmente."

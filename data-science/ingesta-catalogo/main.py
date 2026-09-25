@@ -18,8 +18,8 @@ def main():
         # MongoDB pull 100% de la tabla (colección) excluyendo _id
         data = list(collection.find({}, {'_id': False}))
         
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        filename = f"catalogo_{timestamp}.json"
+        # Usamos un nombre fijo para sobreescribir el archivo viejo en S3 y que Athena no lea basura
+        filename = "catalogo.json"
         
         with open(filename, 'w') as f:
             for record in data:
