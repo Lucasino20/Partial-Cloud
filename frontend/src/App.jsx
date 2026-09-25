@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Restaurantes from './pages/Restaurantes';
 import Pedidos from './pages/Pedidos';
 import Dashboard from './pages/Dashboard';
+import Admin from './pages/Admin';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -33,6 +34,7 @@ function App() {
         <Route path="/restaurantes" element={user ? <Restaurantes /> : <Navigate to="/" />} />
         <Route path="/pedidos" element={user ? <Pedidos user={user} /> : <Navigate to="/" />} />
         <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/" />} />
+        <Route path="/admin" element={user ? <Admin /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

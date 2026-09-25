@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { fetchDashboard, fetchPlatosPopulares } from '../api';
+import { fetchDashboard, fetchPlatosPopulares, fetchVentasMensuales } from '../api';
 
 const Dashboard = ({ user }) => {
   const [data, setData] = useState(null);
   const [athena, setAthena] = useState([]);
+  const [ventas, setVentas] = useState([]);
 
   useEffect(() => {
     fetchDashboard(user.id).then(d => setData(d)).catch(e=>console.log(e));
     fetchPlatosPopulares(3).then(d => setAthena(d.data || d)).catch(e=>console.log(e));
+    fetchVentasMensuales().then(d => setVentas(d.data || d)).catch(e=>console.log(e));
   }, [user.id]);
 
   if(!data) return <div className="container">Cargando dashboard...</div>;
@@ -32,11 +34,22 @@ const Dashboard = ({ user }) => {
 
         <div className="glass-panel">
           <h2 style={{color:'#3b82f6'}}>Top Platos (AWS Athena)</h2>
-          <p style={{fontSize:'0.9rem', marginBottom:'16px'}}>Reporte de Big Data generado desde S3 via Glue Data Catalog.</p>
+          <p style={{fontSize:'0.9rem', marginBottom:'16px'}}>Reporte analítico de Platos Populares.</p>
           {athena && athena.length > 0 ? athena.map((row, i) => (
              <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border-color)'}}>
                <span>{row.dish_name || 'Desconocido'}</span>
                <span style={{fontWeight:'bold'}}>{row.total_vendidos || 0} ventas</span>
+             </div>
+          )) : <p>Cargando modelo analítico...</p>}
+        </div>
+
+        <div className="glass-panel">
+          <h2 style={{color:'#10b981'}}>Ventas Mensuales (Athena)</h2>
+          <p style={{fontSize:'0.9rem', marginBottom:'16px'}}>Reporte analítico de facturación.</p>
+          {ventas && ventas.length > 0 ? ventas.map((row, i) => (
+             <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border-color)'}}>
+               <span>Mes {row.mes}</span>
+               <span style={{fontWeight:'bold'}}>S/ {row.total_mes || 0}</span>
              </div>
           )) : <p>Cargando modelo analítico...</p>}
         </div>

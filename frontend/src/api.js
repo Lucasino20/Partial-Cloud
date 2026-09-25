@@ -29,6 +29,10 @@ export const fetchPlato = async (dishId) => {
   const r = await fetch(`${BASE_URL}/api/restaurantes/platos/${dishId}`);
   return r.json();
 };
+export const createRestaurant = async (data) => {
+  const r = await fetch(`${BASE_URL}/api/restaurantes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  return r.json();
+};
 
 // ms-pedidos
 export const fetchMisPedidos = async (userId) => {
@@ -38,6 +42,22 @@ export const fetchMisPedidos = async (userId) => {
 export const createOrder = async (orderData) => {
   const r = await fetch(`${BASE_URL}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
   if(!r.ok) throw new Error("Error creando orden");
+  return r.json();
+};
+export const fetchAllOrders = async () => {
+  const r = await fetch(`${BASE_URL}/orders`);
+  return r.json();
+};
+export const fetchOrderById = async (id) => {
+  const r = await fetch(`${BASE_URL}/orders/${id}`);
+  return r.json();
+};
+export const deleteOrder = async (id) => {
+  const r = await fetch(`${BASE_URL}/orders/${id}`, { method: 'DELETE' });
+  return r.json();
+};
+export const updateOrderStatus = async (id, status) => {
+  const r = await fetch(`${BASE_URL}/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
   return r.json();
 };
 
@@ -50,5 +70,9 @@ export const fetchDashboard = async (userId) => {
 // ms-consultas
 export const fetchPlatosPopulares = async (limit=5) => {
   const r = await fetch(`${BASE_URL}/api/analitica/platos-populares?limit=${limit}`);
+  return r.json();
+};
+export const fetchVentasMensuales = async () => {
+  const r = await fetch(`${BASE_URL}/api/analitica/ventas-mensuales`);
   return r.json();
 };
