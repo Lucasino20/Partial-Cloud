@@ -7,7 +7,7 @@ const Navbar = ({ user, onLogout }) => {
   return (
     <nav className="navbar">
       <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary-color)' }}>
-        CloudEats 🍕
+        CloudEats
       </div>
       <div className="nav-links">
         <Link to="/restaurantes">Restaurantes</Link>
