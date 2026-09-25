@@ -22,11 +22,9 @@ sudo systemctl enable docker
 cd backend
 
 echo "[2/4] Configurando entorno..."
-# Encontramos el bucket S3 (si no se pasó como parámetro, buscamos uno que empiece con cloudeats)
-S3_BUCKET=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'cloudeats')].Name" --output text | awk '{print $1}')
-if [ -z "$S3_BUCKET" ] || [ "$S3_BUCKET" == "None" ]; then
-    S3_BUCKET="cloudeats-datalake-lucas2026"
-fi
+# Encontramos el bucket S3 de forma exacta usando el ID de la cuenta AWS
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "lucas2026")
+S3_BUCKET="cloudeats-datalake-${ACCOUNT_ID}"
 
 cat <<EOF > .env
 DATABASE_URL=mysql+pymysql://root:utec@${DB_IP}:3306/mydb

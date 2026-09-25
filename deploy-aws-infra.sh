@@ -3,7 +3,8 @@
 # Uso: bash deploy-aws-infra.sh <URL_DE_TU_REPOSITORIO> <NOMBRE_S3_BUCKET>
 
 REPO_URL=${1:-"https://github.com/Lucasino20/Partial-Cloud.git"}
-S3_BUCKET=${2:-"cloudeats-datalake-lucas2026"}
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "lucas2026")
+S3_BUCKET=${2:-"cloudeats-datalake-${ACCOUNT_ID}"}
 
 echo "Usando Repositorio: $REPO_URL"
 echo "Usando Bucket S3: $S3_BUCKET"
