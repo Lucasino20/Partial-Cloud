@@ -10,10 +10,8 @@ services:
       - DB_PASS=utec
       - DB_NAME=mydb
       - S3_BUCKET=${S3_BUCKET}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
-      - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+    volumes:
+      - ~/.aws:/root/.aws:ro
 
   ingesta-pedidos:
     build: ./ingesta-pedidos
@@ -24,17 +22,13 @@ services:
       - DB_PASS=utec
       - DB_NAME=bd_api_orders
       - S3_BUCKET=${S3_BUCKET}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
-      - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+    volumes:
+      - ~/.aws:/root/.aws:ro
 
   ingesta-catalogo:
     build: ./ingesta-catalogo
     environment:
       - MONGO_URI=mongodb://root:utec@${DB_IP}:27017/cloudeats_catalogo?authSource=admin
       - S3_BUCKET=${S3_BUCKET}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
-      - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+    volumes:
+      - ~/.aws:/root/.aws:ro
