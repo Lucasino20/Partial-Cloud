@@ -27,6 +27,59 @@ Contiene scripts en Python diseñados para ejecutarse en contenedores Docker baj
 
 ---
 
+## Endpoints de los microservicios
+
+La siguiente lista corresponde a las rutas implementadas actualmente en el código. Al desplegarse en AWS o localmente con Nginx, todas pasan por el puerto 80 del Balanceador/Proxy.
+
+### Usuarios (`ms-usuarios`)
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/` | Verifica que el servicio esté activo. |
+| `POST` | `/register` | Registra un usuario y su dirección. |
+| `POST` | `/login` | Autentica al usuario y devuelve un token JWT. |
+| `GET` | `/usuarios` | Lista los usuarios. |
+| `GET` | `/usuarios/{user_id}` | Obtiene un usuario por ID. |
+| `GET` | `/docs` | Swagger UI. |
+
+### Pedidos (`ms-pedidos`)
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/` | Verifica que el servicio esté activo. |
+| `GET` | `/orders` | Lista los últimos 100 pedidos. |
+| `POST` | `/orders` | Crea un pedido. |
+| `GET` | `/orders/{id}` | Obtiene un pedido y sus ítems. |
+| `PUT` | `/orders/{id}` | Actualiza el estado de un pedido. |
+| `DELETE` | `/orders/{id}` | Elimina un pedido. |
+| `GET` | `/orders/user/{userId}` | Lista los pedidos de un usuario. |
+| `GET` | `/orders/restaurant/{restaurantId}` | Lista los pedidos de un restaurante. |
+| `GET` | `/docs` | Swagger UI. |
+
+### Catálogo (`ms-catalogo`)
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/health` | Verifica que el servicio esté activo. |
+| `GET` | `/api/restaurantes` | Lista los restaurantes. |
+| `POST` | `/api/restaurantes` | Crea un restaurante con sus platos y reseñas. |
+| `GET` | `/api/restaurantes/platos/{dishId}` | Obtiene los datos de un plato por ID. |
+| `GET` | `/api/restaurantes/favorito/{userId}` | Obtiene el restaurante favorito (requerido por ms-historial). |
+
+### Historial (`ms-historial`)
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/health` | Verifica que el servicio esté activo. |
+| `GET` | `/api/dashboard?userId={userId}` | Agrega datos del usuario, restaurante favorito e historial de pedidos. |
+| `GET` | `/docs` | Swagger UI. |
+
+### Consultas (`ms-consultas`)
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/health` | Verifica que el servicio esté activo. |
+| `GET` | `/api/analitica/platos-populares?limit={limit}` | Reporte de platos populares. |
+| `GET` | `/api/analitica/ventas-mensuales` | Reporte consolidado de ventas por mes. |
+| `GET` | `/docs` | Swagger UI. |
+
+---
+
 ## Guía de Despliegue en AWS Academy
 
 Para este proyecto levantarás Máquinas Virtuales (MVs) en AWS EC2 usando la AMI **`Cloud9Ubuntu22`**. No tienes que modificar código; simplemente clona el repositorio y ejecuta los scripts de bash proporcionados.
@@ -61,7 +114,6 @@ Para este proyecto levantarás Máquinas Virtuales (MVs) en AWS EC2 usando la AM
    ```bash
    bash deploy-ingesta.sh
    ```
-   *(Próximamente este script iniciará los trabajos de extracción hacia S3).*
 
 ---
 
@@ -78,7 +130,6 @@ Para que la arquitectura funcione de manera segura y sin bloqueos de firewall en
 #### 2. Security Group: "SG-MV-Backend" (MVs de Producción)
 - **SSH (22)**: Desde tu IP personal.
 - **HTTP (80)**: Desde el Security Group del Load Balancer. 
-  *(No necesitas abrir 8000, 3002 ni 3005; Nginx se encarga internamente de todo).*
 
 #### 3. Security Group: "SG-LoadBalancer" (Balanceador de Carga)
 - **HTTP (80)**: Desde cualquier lugar (`0.0.0.0/0`).
@@ -86,6 +137,3 @@ Para que la arquitectura funcione de manera segura y sin bloqueos de firewall en
 #### 4. Security Group: "SG-MV-Ingesta" (Máquina de Data Science)
 - **SSH (22)**: Desde tu IP personal.
 - *(Solo requiere salida a internet, no necesita recibir tráfico de otros servicios).*
-
----
-> **Tip para Pruebas Locales:** Si deseas probar el proyecto en tu propia computadora sin gastar créditos de AWS, simplemente usa `bash deploy-apps.sh host.docker.internal` (o tu IP local) después de haber levantado las DBs, y corre `npm run dev` dentro de la carpeta `frontend/`.
