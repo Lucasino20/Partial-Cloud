@@ -26,6 +26,12 @@ def main():
         query_items = "SELECT * FROM order_items"
         df_items = pd.read_sql(query_items, conn)
         
+        # Reemplazar comas en los textos para no romper el CSV de Athena
+        if 'address' in df_orders.columns:
+            df_orders['address'] = df_orders['address'].astype(str).str.replace(',', ' ', regex=False)
+        if 'name' in df_items.columns:
+            df_items['name'] = df_items['name'].astype(str).str.replace(',', ' ', regex=False)
+        
         conn.close()
         
         # Usar nombres fijos para sobreescribir archivos antiguos en S3
