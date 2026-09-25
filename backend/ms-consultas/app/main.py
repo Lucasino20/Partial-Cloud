@@ -21,18 +21,20 @@ app.add_middleware(
 
 # Configuracion de AWS Athena desde Variables de Entorno
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-S3_OUTPUT = os.getenv("ATHENA_S3_OUTPUT", "s3://cloudeats-athena-results-bucket/")
-ATHENA_DATABASE = os.getenv("ATHENA_DATABASE", "cloudeats_db")
+S3_OUTPUT = os.getenv("ATHENA_S3_OUTPUT") or "s3://cloudeats-datalake-lucas2026/athena-results/"
+ATHENA_DATABASE = os.getenv("ATHENA_DATABASE") or "cloudeats_glue_db"
 
 def get_athena_client():
     """Inicializa el cliente boto3 para Athena"""
-    return boto3.client(
-        'athena',
-        region_name=AWS_REGION,
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        aws_session_token=os.getenv("AWS_SESSION_TOKEN")  # Opcional para credenciales temporales de laboratorio
-    )
+    kwargs = {'region_name': AWS_REGION}
+    access_key = os.getenv("AWS_ACCESS_KEY_ID")
+    if access_key:
+        kwargs['aws_access_key_id'] = access_key
+        kwargs['aws_secret_access_key'] = os.getenv("AWS_SECRET_ACCESS_KEY")
+        session_token = os.getenv("AWS_SESSION_TOKEN")
+        if session_token:
+            kwargs['aws_session_token'] = session_token
+    return boto3.client('athena', **kwargs)
 
 def run_athena_query(query: str):
     """Ejecuta una consulta SQL en Athena y mapea la respuesta a JSON"""
