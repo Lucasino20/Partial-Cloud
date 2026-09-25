@@ -2,15 +2,11 @@
 # deploy-aws-infra.sh - Automatización TOTAL (Infraestructura + Software) usando EC2 UserData
 # Uso: bash deploy-aws-infra.sh <URL_DE_TU_REPOSITORIO> <NOMBRE_S3_BUCKET>
 
-REPO_URL=$1
-S3_BUCKET=$2
+REPO_URL=${1:-"https://github.com/Lucasino20/Partial-Cloud.git"}
+S3_BUCKET=${2:-"cloudeats-data-lake-$RANDOM$RANDOM"}
 
-if [ -z "$REPO_URL" ] || [ -z "$S3_BUCKET" ]; then
-    echo "ERROR: Faltan argumentos."
-    echo "Uso: bash deploy-aws-infra.sh <URL_GITHUB_REPO> <NOMBRE_S3_BUCKET>"
-    echo "Ejemplo: bash deploy-aws-infra.sh https://github.com/FernandoEspi/mv-categorias.git cloudeats-data-lake"
-    exit 1
-fi
+echo "Usando Repositorio: $REPO_URL"
+echo "Usando Bucket S3: $S3_BUCKET"
 
 echo "========================================================="
 echo "☁️  Iniciando creación 100% Autónoma (Infraestructura + Código)"
