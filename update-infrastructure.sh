@@ -11,7 +11,7 @@ BACKEND_IDS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=MV-Back
 if [ -n "$BACKEND_IDS" ] && [ "$BACKEND_IDS" != "None" ]; then
     for ID in $BACKEND_IDS; do
         aws ssm send-command --instance-ids $ID --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["sudo systemctl stop apache2 || true", "sudo systemctl disable apache2 || true", "cd /home/ubuntu/app", "sudo -u ubuntu git fetch --all", "sudo -u ubuntu git reset --hard origin/setup-parcial", "S3_B=\$(aws s3api list-buckets --query \"Buckets[?starts_with(Name, \\\"cloudeats\\\")].Name\" --output text | awk \"{print \\$1}\")", "if [ -z \"\$S3_B\" ]; then S3_B=\"cloudeats-datalake-lucas2026\"; fi", "sed -i \"s|ATHENA_S3_OUTPUT=.*|ATHENA_S3_OUTPUT=s3://\$S3_B/athena-results/|g\" backend/.env", "sed -i \"s|ATHENA_DATABASE=.*|ATHENA_DATABASE=cloudeats_glue_db|g\" backend/.env", "sudo docker compose -f backend/docker-compose.yml up -d --build"]' > /dev/null
+            --parameters 'commands=["sudo systemctl stop apache2 || true", "sudo systemctl disable apache2 || true", "cd /home/ubuntu/app", "sudo -u ubuntu git fetch --all", "sudo -u ubuntu git reset --hard origin/setup-parcial", "ACCOUNT_ID=\$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo \\"lucas2026\\")", "S3_B=\"cloudeats-datalake-\$ACCOUNT_ID\"", "sed -i \"s|ATHENA_S3_OUTPUT=.*|ATHENA_S3_OUTPUT=s3://\$S3_B/athena-results/|g\" backend/.env", "sed -i \"s|ATHENA_DATABASE=.*|ATHENA_DATABASE=cloudeats_glue_db|g\" backend/.env", "sudo docker compose -f backend/docker-compose.yml up -d --build"]' > /dev/null
         echo "✅ Comando de actualización enviado al Backend ($ID)"
     done
 else
@@ -23,24 +23,13 @@ INGESTA_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=MV-Inges
 
 if [ -n "$INGESTA_ID" ] && [ "$INGESTA_ID" != "None" ]; then
     aws ssm send-command --instance-ids $INGESTA_ID --document-name "AWS-RunShellScript" \
-        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git fetch --all", "sudo -u ubuntu git reset --hard origin/setup-parcial", "DB_IP=\$(grep DB_IP data-science/.env | cut -d \\"=\\" -f2)", "sudo docker run --rm -v /home/ubuntu/app/backend/scripts:/scripts -w /scripts -e DB_HOST=\$DB_IP python:3.10-slim bash -c \"pip install faker psycopg2-binary mysql-connector-python pymongo && python -u seed_fake_data.py\"", "S3_B=\$(grep S3_BUCKET data-science/.env | cut -d \\"=\\" -f2)", "aws s3 rm s3://\$S3_B/raw/ --recursive", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate"]' > /dev/null
+        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git fetch --all", "sudo -u ubuntu git reset --hard origin/setup-parcial", "DB_IP=\$(grep DB_IP data-science/.env | cut -d \\"=\\" -f2)", "sudo docker run --rm -v /home/ubuntu/app/backend/scripts:/scripts -w /scripts -e DB_HOST=\$DB_IP python:3.10-slim bash -c \"pip install faker psycopg2-binary mysql-connector-python pymongo && python -u seed_fake_data.py\"", "S3_B=\$(grep S3_BUCKET data-science/.env | cut -d \\"=\\" -f2)", "aws s3 rm s3://\$S3_B/raw/ --recursive", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate", "sleep 15", "cd data-science", "python3 -m venv venv", "source venv/bin/activate", "pip install boto3", "export S3_BUCKET=\$S3_B", "python3 setup_athena.py"]' > /dev/null
     echo "✅ Comando de actualización enviado a la Ingesta ($INGESTA_ID)"
 else
     echo "⚠️ No se encontró la instancia de Ingesta."
 fi
 
-echo "[3/4] Recreando vistas en Athena (si hubo cambios en Data Science)..."
-if [ -f "data-science/setup_athena.py" ]; then
-    source data-science/venv/bin/activate 2>/dev/null || true
-    S3_B=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'cloudeats')].Name" --output text | awk '{print $1}')
-    if [ -z "$S3_B" ] || [ "$S3_B" == "None" ]; then
-        S3_B="cloudeats-datalake-lucas2026"
-    fi
-    export S3_BUCKET=$S3_B
-    python3 data-science/setup_athena.py
-else
-    echo "⚠️ Script de Athena no encontrado localmente."
-fi
+echo "[3/4] (Omitido) Athena ahora se configura en la MV de Ingesta."
 
 echo "[4/4] Actualizando y Recompilando el Frontend..."
 API_ID=$(aws apigatewayv2 get-apis --query 'Items[?Name==`CloudEats-API`].ApiId | [0]' --output text 2>/dev/null)
