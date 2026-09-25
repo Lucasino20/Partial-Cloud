@@ -68,7 +68,7 @@ cd app
 bash deploy-dbs.sh
 EOF
 
-DB_OUTPUT=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type t2.medium --key-name $KEY_NAME --security-group-ids $SG_BBDD --subnet-id $SUBNET_1 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MV-BBDD}]' --iam-instance-profile Name=LabInstanceProfile --user-data file://userdata_db.sh --query "Instances[0].[InstanceId,PrivateIpAddress]" --output text)
+DB_OUTPUT=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type t2.medium --key-name $KEY_NAME --security-group-ids $SG_BBDD --subnet-id $SUBNET_1 --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20,"VolumeType":"gp3"}}]' --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MV-BBDD}]' --iam-instance-profile Name=LabInstanceProfile --user-data file://userdata_db.sh --query "Instances[0].[InstanceId,PrivateIpAddress]" --output text)
 DB_ID=$(echo $DB_OUTPUT | awk '{print $1}')
 DB_IP=$(echo $DB_OUTPUT | awk '{print $2}')
 
@@ -91,9 +91,9 @@ cd app
 bash deploy-ingesta.sh $DB_IP $S3_BUCKET
 EOF
 
-BACKEND_IDS=$(aws ec2 run-instances --image-id $AMI_ID --count 2 --instance-type t2.medium --key-name $KEY_NAME --security-group-ids $SG_BACK --subnet-id $SUBNET_1 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MV-Backend}]' --iam-instance-profile Name=LabInstanceProfile --user-data file://userdata_backend.sh --query "Instances[*].InstanceId" --output text)
+BACKEND_IDS=$(aws ec2 run-instances --image-id $AMI_ID --count 2 --instance-type t2.medium --key-name $KEY_NAME --security-group-ids $SG_BACK --subnet-id $SUBNET_1 --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20,"VolumeType":"gp3"}}]' --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MV-Backend}]' --iam-instance-profile Name=LabInstanceProfile --user-data file://userdata_backend.sh --query "Instances[*].InstanceId" --output text)
 
-aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type t2.medium --key-name $KEY_NAME --security-group-ids $SG_INGE --subnet-id $SUBNET_1 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MV-Ingesta}]' --iam-instance-profile Name=LabInstanceProfile --user-data file://userdata_ingesta.sh >/dev/null
+aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type t2.medium --key-name $KEY_NAME --security-group-ids $SG_INGE --subnet-id $SUBNET_1 --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20,"VolumeType":"gp3"}}]' --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MV-Ingesta}]' --iam-instance-profile Name=LabInstanceProfile --user-data file://userdata_ingesta.sh >/dev/null
 
 echo "[6/8] Creando Load Balancer (Interno/Privado) y enlazando Backends..."
 ALB_ARN=$(aws elbv2 create-load-balancer --name cloudeats-alb-final --subnets $SUBNET_1 $SUBNET_2 --security-groups $SG_ALB --scheme internal --query 'LoadBalancers[0].LoadBalancerArn' --output text)
