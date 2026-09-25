@@ -69,6 +69,9 @@ query_catalogo = f"""
 CREATE EXTERNAL TABLE {db_name}.catalogo (
   id int, nombre string, distrito string, platos array<struct<id:int, nombre:string, precio:double>>
 ) ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
+WITH SERDEPROPERTIES (
+  'ignore.malformed.json' = 'true'
+)
 LOCATION 's3://{bucket_name}/raw/catalogo/';
 """
 execute_query(query_catalogo)
