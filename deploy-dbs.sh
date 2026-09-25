@@ -11,6 +11,11 @@ sudo systemctl enable docker
 cd backend
 
 echo "[2/3] Levantando bases de datos..."
+# Detener MySQL nativo si la AMI de Cloud9 lo trae por defecto (libera el puerto 3306)
+sudo systemctl stop mysql || true
+sudo systemctl disable mysql || true
+sudo pkill -9 mysqld || true
+
 sudo docker compose -f docker-compose-db.yml up -d
 
 echo "[3/3] Esperando a que estén listas (20 seg)..."
