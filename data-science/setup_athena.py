@@ -47,7 +47,7 @@ execute_query(query_users)
 
 query_orders = f"""
 CREATE EXTERNAL TABLE IF NOT EXISTS {db_name}.pedidos (
-  id int, user_id int, restaurant_id int, total double, status string, created_at string
+  id int, user_id string, restaurant_id string, subtotal double, delivery_fee double, total double, address string, status string, created_at string
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE
 LOCATION 's3://{bucket_name}/raw/orders/' tblproperties ("skip.header.line.count"="1");
 """
@@ -55,7 +55,7 @@ execute_query(query_orders)
 
 query_items = f"""
 CREATE EXTERNAL TABLE IF NOT EXISTS {db_name}.order_items (
-  id int, order_id int, dish_id int, quantity int, price double
+  id int, order_id int, dish_id string, name string, quantity int, price double, qty int
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE
 LOCATION 's3://{bucket_name}/raw/order_items/' tblproperties ("skip.header.line.count"="1");
 """
