@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,7 +17,7 @@ import (
 )
 
 type dish struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	ID          int                `bson:"id" json:"id"`
 	Nombre      string             `bson:"nombre" json:"nombre"`
 	Precio      float64            `bson:"precio" json:"precio"`
 	Descripcion string             `bson:"descripcion,omitempty" json:"descripcion,omitempty"`
@@ -101,16 +102,17 @@ func (api service) createRestaurant(writer http.ResponseWriter, request *http.Re
 }
 
 func (api service) dishByID(writer http.ResponseWriter, request *http.Request) {
-	dishID, err := primitive.ObjectIDFromHex(request.PathValue("dishId"))
+	dishIDStr := request.PathValue("dishId")
+	dishID, err := strconv.Atoi(dishIDStr)
 	if err != nil {
-		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Plato no encontrado"})
+		writeJSON(writer, http.StatusBadRequest, map[string]string{"message": "ID de plato inválido"})
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(request.Context(), 10*time.Second)
 	defer cancel()
 	var value restaurant
-	err = api.collection.FindOne(ctx, bson.M{"platos._id": dishID}, options.FindOne().SetProjection(bson.M{"platos.$": 1})).Decode(&value)
+	err = api.collection.FindOne(ctx, bson.M{"platos.id": dishID}, options.FindOne().SetProjection(bson.M{"platos.$": 1})).Decode(&value)
 	if err == mongo.ErrNoDocuments || len(value.Platos) == 0 {
 		writeJSON(writer, http.StatusNotFound, map[string]string{"message": "Plato no encontrado"})
 		return
