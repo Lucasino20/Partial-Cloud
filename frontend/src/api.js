@@ -7,6 +7,14 @@ export const login = async (credentials) => {
   if(!r.ok) throw new Error("Credenciales inválidas");
   return r.json();
 };
+export const registerUser = async (userData) => {
+  const r = await fetch(`${BASE_URL}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userData) });
+  if(!r.ok) {
+    const err = await r.json().catch(()=>({}));
+    throw new Error(err.detail || err.error || "Error al registrarse");
+  }
+  return r.json();
+};
 export const fetchUsuarios = async () => {
   const r = await fetch(`${BASE_URL}/usuarios`);
   return r.json();
