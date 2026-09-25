@@ -25,7 +25,7 @@ try:
     """)
     # Check if data already exists
     cursor_mysql.execute("SELECT COUNT(*) FROM users")
-    if cursor_mysql.fetchone()[0] == 0:
+    if cursor_mysql.fetchone()[0] < 10:
         users_data = []
         print("Generando 5,000 usuarios...")
         for _ in range(5000):
@@ -34,7 +34,7 @@ try:
         conn_mysql.commit()
         print("✅ 5,000 usuarios insertados en MySQL")
     else:
-        print("✅ MySQL ya tenía datos de usuarios.")
+        print("✅ MySQL ya tenía los 5,000 usuarios.")
     conn_mysql.close()
 except Exception as e:
     print("❌ Error MySQL:", e)
