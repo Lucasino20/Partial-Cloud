@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - ms-usuarios
+      - ms-pedidos
+      - ms-catalogo
+      - ms-historial
+      - ms-consultas
+    restart: always
+
+  ms-usuarios:
+    build: ./ms-usuarios
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=supersecret
+    restart: unless-stopped
+
+  ms-pedidos:
+    build: ./ms-pedidos
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-utec}
+      - DB_NAME=${DB_NAME:-bd_api_orders}
+      - RESTAURANTS_URL=http://ms-catalogo:3002
+    restart: unless-stopped
+
+  ms-catalogo:
+    build: ./ms-catalogo
+    environment:
+      - MONGO_URI=${MONGO_URI}
+    restart: unless-stopped
+
+  ms-historial:
+    build: ./ms-historial
+    environment:
+      - MS1_USUARIOS_URL=http://ms-usuarios:8000
+      - MS2_CATALOGO_URL=http://ms-catalogo:3002
+      - MS3_PEDIDOS_URL=http://ms-pedidos:8000
+    restart: unless-stopped
+
+  ms-consultas:
+    build: ./ms-consultas
+    environment:
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - ATHENA_S3_OUTPUT=${ATHENA_S3_OUTPUT}
+      - ATHENA_DATABASE=${ATHENA_DATABASE}
+    restart: unless-stopped
