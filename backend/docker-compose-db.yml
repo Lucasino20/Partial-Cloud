@@ -14,8 +14,7 @@ services:
     restart: always
 
   mysql:
-    image: mysql:8
-    command: --innodb-buffer-pool-size=128M
+    image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: utec
       MYSQL_DATABASE: mydb
@@ -27,7 +26,6 @@ services:
 
   mongodb:
     image: mongo:6
-    command: --wiredTigerCacheSizeGB 0.5
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: utec
