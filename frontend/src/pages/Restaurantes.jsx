@@ -17,24 +17,29 @@ const Restaurantes = () => {
 
   const handleOrder = async () => {
     if(!orderingDish) return;
-    const user = JSON.parse(localStorage.getItem('cloudeats_user'));
+    const user = JSON.parse(localStorage.getItem('cloudeats_user')) || {};
     
     // Cumplir rúbrica: invocar al menos 2 endpoints del catálogo (1. lista, 2. detalle plato)
     await fetchPlato(orderingDish.id || orderingDish._id);
     
+    // Extraer la dirección real del usuario (si está disponible)
+    const userAddress = user?.direcciones?.[0]?.calle_y_numero || user?.direccion || "Av. Principal 123";
+    
     const payload = {
       user_id: user.id.toString(),
       restaurant_id: (orderRest.id || orderRest._id).toString(),
-      address: "Calle " + Math.floor(Math.random()*100),
+      address: userAddress,
       items: [{ dish_id: (orderingDish.id || orderingDish._id).toString(), qty: 1 }]
     };
     
     try {
       await createOrder(payload);
       setMsg(`¡Pedido de ${orderingDish.nombre} creado con éxito!`);
-      setTimeout(() => { setOrderingDish(null); setMsg(''); }, 3000);
+      setOrderingDish(null); // Cerrar modal inmediatamente
+      setTimeout(() => { setMsg(''); }, 4000);
     } catch(e) {
       setMsg("Error creando pedido");
+      setOrderingDish(null); // Cerrar modal en caso de error también para no trabar al usuario
     }
   };
 

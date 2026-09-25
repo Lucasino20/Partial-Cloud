@@ -4,8 +4,13 @@
 API_URL=$1
 
 if [ -z "$API_URL" ]; then
-    echo "ERROR: Debes proporcionar la URL de tu API (Load Balancer o Nginx)."
-    exit 1
+    if [ -f "frontend/.env" ]; then
+        API_URL=$(grep VITE_API_URL frontend/.env | cut -d '=' -f2)
+        echo "Usando API_URL existente del .env: $API_URL"
+    else
+        echo "ERROR: Debes proporcionar la URL de tu API (Load Balancer o Nginx)."
+        exit 1
+    fi
 fi
 
 echo "[1/4] Configurando variables de entorno automáticamente..."
