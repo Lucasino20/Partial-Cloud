@@ -19,7 +19,16 @@ sudo systemctl enable docker
 
 cd data-science
 
-echo "[2/3] Configurando variables de entorno (Sin credenciales manuales)..."
+echo "[2/4] Instalando AWS CLI y creando el bucket automáticamente..."
+sudo apt install -y awscli curl unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+sudo ./aws/install --update || true
+
+# Intentar crear el bucket. Si ya existe y es tuyo, el || true evitará que falle el script.
+aws s3 mb s3://${S3_BUCKET} --region us-east-1 || echo "El bucket ya existe o no se pudo crear (podría ser por permisos). Continuando..."
+
+echo "[3/4] Configurando variables de entorno..."
 cat <<EOF > .env
 DB_IP=${DB_IP}
 S3_BUCKET=${S3_BUCKET}
