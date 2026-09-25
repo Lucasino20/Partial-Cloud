@@ -12,7 +12,7 @@ if [ -n "$BACKEND_IDS" ] && [ "$BACKEND_IDS" != "None" ]; then
     for ID in $BACKEND_IDS; do
         # AWS SSM (Systems Manager) permite ejecutar comandos en las MVs sin usar SSH
         aws ssm send-command --instance-ids $ID --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git pull", "sudo docker compose -f backend/docker-compose.yml up -d --build"]' > /dev/null
+            --parameters 'commands=["sudo systemctl stop apache2 || true", "sudo systemctl disable apache2 || true", "cd /home/ubuntu/app", "sudo -u ubuntu git pull", "sudo docker compose -f backend/docker-compose.yml up -d --build"]' > /dev/null
         echo "✅ Comando de actualización enviado al Backend ($ID)"
     done
 else

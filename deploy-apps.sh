@@ -10,6 +10,8 @@ if [ -z "$DB_IP" ]; then
 fi
 
 echo "[1/4] Instalando dependencias..."
+sudo systemctl stop apache2 || true
+sudo systemctl disable apache2 || true
 sudo apt update
 sudo apt install -y docker.io docker-compose-v2 git
 
