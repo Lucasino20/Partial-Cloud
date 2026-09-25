@@ -3,10 +3,13 @@
 # Uso: bash deploy-aws-infra.sh <URL_DE_TU_REPOSITORIO> <NOMBRE_S3_BUCKET>
 
 REPO_URL=${1:-"https://github.com/Lucasino20/Partial-Cloud.git"}
-S3_BUCKET=${2:-"cloudeats-data-lake-$RANDOM$RANDOM"}
+S3_BUCKET=${2:-"cloudeats-datalake-lucas2026"}
 
 echo "Usando Repositorio: $REPO_URL"
 echo "Usando Bucket S3: $S3_BUCKET"
+
+echo "Creando Bucket S3 Automáticamente..."
+aws s3api create-bucket --bucket $S3_BUCKET --region us-east-1 > /dev/null 2>&1 || true
 
 echo "========================================================="
 echo "☁️  Iniciando creación 100% Autónoma (Infraestructura + Código)"
