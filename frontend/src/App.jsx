@@ -4,7 +4,8 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Restaurantes from './pages/Restaurantes';
 import Dashboard from './pages/Dashboard';
-import './App.css'; // Mantenemos el import por si acaso, aunque está vacío
+import UsersOrders from './pages/UsersOrders';
+import OrdersPage from './pages/OrdersPage';
 
 function App() {
   return (
@@ -14,6 +15,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/restaurantes" element={<Restaurantes />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/usuarios" element={<UsersOrders />} />
+        <Route path="/pedidos" element={<OrdersPage />} />
       </Routes>
     </BrowserRouter>
   );

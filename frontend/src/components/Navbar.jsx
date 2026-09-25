@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Pizza, Home, BarChart3, Store } from 'lucide-react';
+import { Pizza, Home, BarChart3, Store, Users, ShoppingBag } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
@@ -22,12 +22,15 @@ const Navbar = () => {
           <Link to="/restaurantes" className={`nav-link ${isActive('/restaurantes')}`} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
             <Store size={20} /> Restaurantes
           </Link>
+          <Link to="/pedidos" className={`nav-link ${isActive('/pedidos')}`} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <ShoppingBag size={20} /> Pedidos
+          </Link>
           <Link to="/dashboard" className={`nav-link ${isActive('/dashboard')}`} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
             <BarChart3 size={20} /> Analítica
           </Link>
-          <button className="btn btn-primary btn-sm" style={{marginLeft: '12px'}}>
-            Iniciar Sesión
-          </button>
+          <Link to="/usuarios" className="btn btn-primary btn-sm" style={{marginLeft: '12px'}}>
+            Usuarios / Login
+          </Link>
         </div>
       </div>
     </nav>
