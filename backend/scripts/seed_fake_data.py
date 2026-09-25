@@ -10,6 +10,8 @@ fake = Faker('es_MX')
 DB_HOST = os.getenv("DB_HOST", "localhost")
 print(f"Conectando a bases de datos en {DB_HOST} para inyectar Fake Data (20,000+ registros)...")
 
+has_errors = False
+
 # 1. MySQL (Usuarios)
 try:
     conn_mysql = mysql.connector.connect(host=DB_HOST, port=3306, user="root", password="utec", database="mydb")
@@ -36,6 +38,7 @@ try:
     conn_mysql.close()
 except Exception as e:
     print("❌ Error MySQL:", e)
+    has_errors = True
 
 # 2. MongoDB (Catálogo)
 try:
@@ -66,6 +69,7 @@ try:
         print("✅ MongoDB ya tenía datos de catálogo.")
 except Exception as e:
     print("❌ Error MongoDB:", e)
+    has_errors = True
 
 # 3. PostgreSQL (Pedidos)
 try:
@@ -112,5 +116,11 @@ try:
     conn_pg.close()
 except Exception as e:
     print("❌ Error PostgreSQL:", e)
+    has_errors = True
+
+if has_errors:
+    print("❌ Hubo errores conectándose a las bases de datos. Saliendo con error.")
+    import sys
+    sys.exit(1)
 
 print("🎉 Inyección de Fake Data (más de 35,000 registros) Finalizada exitosamente.")
