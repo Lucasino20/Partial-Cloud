@@ -42,7 +42,11 @@ sudo docker compose build
 echo "[4/4] Levantando microservicios..."
 sudo docker compose up -d
 
-echo "Esperando 10 segundos..."
+echo "Esperando 10 segundos para inicializar DBs..."
 sleep 10
 sudo docker compose ps
-echo "¡Despliegue finalizado exitosamente! Nginx escuchando en el puerto 80."
+
+echo "[5/5] Inyectando 20,000+ registros de Fake Data en las Bases de Datos..."
+sudo docker run --rm -v $(pwd)/scripts:/scripts -w /scripts -e DB_HOST=${DB_IP} python:3.10-slim bash -c "pip install faker psycopg2-binary mysql-connector-python pymongo && python seed_fake_data.py"
+
+echo "¡Despliegue finalizado exitosamente! Nginx escuchando en el puerto 80 y Fake Data inyectada."
