@@ -34,6 +34,16 @@ except Exception as e:
 def debug_db():
     return {"db_status": db_status}
 
+@app.post("/init-db")
+def init_db():
+    try:
+        models.Base.metadata.create_all(bind=database.engine)
+        global db_status
+        db_status = "Connected"
+        return {"message": "Tablas creadas exitosamente"}
+    except Exception as e:
+        return {"error": str(e)}
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SECRET_KEY = "tu_secreto_super_seguro"
