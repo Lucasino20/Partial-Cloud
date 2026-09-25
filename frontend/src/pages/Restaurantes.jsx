@@ -64,9 +64,9 @@ const Restaurantes = () => {
               <h2 style={{ margin: '0 0 20px 0', fontSize: '1.4rem', color: '#111827' }}>{r.nombre}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {r.platos && r.platos.slice(0,4).map(p => (
-                   <div key={p.id || p._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6', transition: 'all 0.2s ease', flexWrap: 'wrap', gap: '10px' }}>
-                     <span style={{ fontWeight: '500', color: '#1f2937', flex: '1 1 auto', minWidth: '100px', wordBreak: 'break-word' }}>{p.nombre}</span>
-                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexShrink: 0 }}>
+                   <div key={p.id || p._id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', padding: '12px 15px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #f3f4f6', gap: '10px' }}>
+                     <span style={{ fontWeight: '500', color: '#1f2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nombre}</span>
+                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                        <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>S/{Number(p.precio).toFixed(2)}</span>
                        <button className="btn" style={{ padding: '6px 16px', fontSize: '0.85rem', borderRadius: '20px', whiteSpace: 'nowrap' }} onClick={()=>{setOrderingDish(p); setOrderRest(r);}}>Pedir</button>
                      </div>

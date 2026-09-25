@@ -16,6 +16,9 @@ const Navbar = ({ user, onLogout }) => {
         {user.role === 'admin' && (
           <Link to="/admin" style={{color: '#3b82f6'}}>Admin Panel</Link>
         )}
+        {user.role === 'restaurante' && (
+          <Link to="/cocina" style={{color: '#f59e0b'}}>Cocina</Link>
+        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>

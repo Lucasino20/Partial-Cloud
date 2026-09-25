@@ -58,6 +58,10 @@ export const fetchMisPedidos = async (userId) => {
   const r = await fetchAuth(`${BASE_URL}/orders/user/${userId}`);
   return r.json();
 };
+export const fetchPedidosByRestaurant = async (restaurantId) => {
+  const r = await fetchAuth(`${BASE_URL}/orders/restaurant/${restaurantId}`);
+  return r.json();
+};
 export const createOrder = async (orderData) => {
   const r = await fetchAuth(`${BASE_URL}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
   if(!r.ok) throw new Error("Error creando orden");
