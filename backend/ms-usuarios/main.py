@@ -24,8 +24,16 @@ def root():
 def health_check():
     return {"status": "UP"}
 
+from sqlalchemy import text
+
 try:
     models.Base.metadata.create_all(bind=database.engine)
+    with database.engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN rol VARCHAR(50) DEFAULT 'cliente' NOT NULL;"))
+            conn.commit()
+        except Exception:
+            pass # Columna ya existe
     db_status = "Connected"
 except Exception as e:
     db_status = str(e)
@@ -68,7 +76,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
         apellido=user.apellido,
         email=user.email,
         telefono=user.telefono,
-        password=hashed_password
+        password=hashed_password,
+        rol=user.rol
     )
     
     db.add(new_user)

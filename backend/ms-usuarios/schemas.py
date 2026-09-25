@@ -7,6 +7,7 @@ class UserCreate(BaseModel):
     telefono: str
     password: str
     direccion: str
+    rol: str = "cliente"
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -18,6 +19,7 @@ class UserResponse(BaseModel):
     apellido: str
     email: EmailStr
     telefono: str
+    rol: str
 
     class Config:
         from_attributes = True
