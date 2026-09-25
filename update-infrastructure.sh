@@ -39,11 +39,11 @@ else
 fi
 
 echo "[4/4] Actualizando y Recompilando el Frontend..."
-ALB_DNS=$(aws elbv2 describe-load-balancers --names cloudeats-alb-final --query 'LoadBalancers[0].DNSName' --output text 2>/dev/null)
-if [ -n "$ALB_DNS" ] && [ "$ALB_DNS" != "None" ]; then
-    bash deploy-frontend.sh http://$ALB_DNS
+API_ID=$(aws apigatewayv2 get-apis --query 'Items[?Name==`CloudEats-API`].ApiId | [0]' --output text 2>/dev/null)
+if [ -n "$API_ID" ] && [ "$API_ID" != "None" ]; then
+    bash deploy-frontend.sh https://$API_ID.execute-api.us-east-1.amazonaws.com
 else
-    echo "⚠️ No se encontró el Load Balancer para el Frontend."
+    echo "⚠️ No se encontró el API Gateway para el Frontend."
 fi
 
 echo "========================================================="
