@@ -28,8 +28,9 @@ try:
     if cursor_mysql.fetchone()[0] < 10:
         users_data = []
         print("Generando 5,000 usuarios...")
-        for _ in range(5000):
-            users_data.append((fake.first_name(), fake.last_name(), fake.unique.email(), fake.phone_number(), "hash123", "cliente"))
+        for i in range(5000):
+            email = f"user_{i}_{random.randint(1000,9999)}@cloudeats.com"
+            users_data.append((fake.first_name(), fake.last_name(), email, fake.phone_number(), "hash123", "cliente"))
         cursor_mysql.executemany("INSERT INTO users (nombre, apellido, email, telefono, password, role) VALUES (%s, %s, %s, %s, %s, %s)", users_data)
         conn_mysql.commit()
         print("✅ 5,000 usuarios insertados en MySQL")

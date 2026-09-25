@@ -37,7 +37,7 @@ S3_BUCKET=${S3_BUCKET}
 EOF
 
 echo "[5/6] Inyectando 20,000+ registros de Fake Data antes de la extracción..."
-sudo docker run --rm -v $(pwd)/../backend/scripts:/scripts -w /scripts -e DB_HOST=${DB_IP} python:3.10-slim bash -c "pip install faker psycopg2-binary mysql-connector-python pymongo && python seed_fake_data.py"
+sudo docker run --rm -v $(pwd)/../backend/scripts:/scripts -w /scripts -e DB_HOST=${DB_IP} python:3.10-slim bash -c "pip install faker psycopg2-binary mysql-connector-python pymongo && python -u seed_fake_data.py"
 
 echo "[6/6] Construyendo y ejecutando contenedores de extracción a S3..."
 sudo docker compose build
