@@ -40,7 +40,7 @@ execute_query(f"CREATE DATABASE IF NOT EXISTS {db_name}")
 execute_query(f"DROP TABLE IF EXISTS {db_name}.usuarios")
 query_users = f"""
 CREATE EXTERNAL TABLE {db_name}.usuarios (
-  id int, nombre string, apellido string, email string, password string, created_at string
+  id int, nombre string, apellido string, email string, telefono string, password string, role string, restaurant_id string
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE
 LOCATION 's3://{bucket_name}/raw/usuarios/' tblproperties ("skip.header.line.count"="1");
 """
@@ -58,7 +58,7 @@ execute_query(query_orders)
 execute_query(f"DROP TABLE IF EXISTS {db_name}.order_items")
 query_items = f"""
 CREATE EXTERNAL TABLE {db_name}.order_items (
-  id int, order_id int, dish_id string, name string, quantity int, price double, qty int
+  id int, order_id int, dish_id string, name string, price double, qty int
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE
 LOCATION 's3://{bucket_name}/raw/order_items/' tblproperties ("skip.header.line.count"="1");
 """

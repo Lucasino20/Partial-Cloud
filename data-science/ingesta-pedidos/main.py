@@ -45,6 +45,16 @@ def main():
         
         if s3_bucket:
             s3 = boto3.client('s3')
+            # Limpiar bucket antes de subir para evitar duplicados de Athena
+            for prefix in ['raw/orders/', 'raw/order_items/']:
+                try:
+                    objects_to_delete = s3.list_objects_v2(Bucket=s3_bucket, Prefix=prefix)
+                    if 'Contents' in objects_to_delete:
+                        delete_keys = {'Objects': [{'Key': obj['Key']} for obj in objects_to_delete['Contents']]}
+                        s3.delete_objects(Bucket=s3_bucket, Delete=delete_keys)
+                except Exception as e:
+                    print(f"No se pudieron limpiar archivos viejos en {prefix}: {e}")
+
             s3.upload_file(file_orders, s3_bucket, f"raw/orders/{file_orders}")
             s3.upload_file(file_items, s3_bucket, f"raw/order_items/{file_items}")
             print(f"✅ Archivos subidos exitosamente a S3 en s3://{s3_bucket}/raw/")

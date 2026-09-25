@@ -87,11 +87,11 @@ export const fetchDashboard = async (userId) => {
 };
 
 // ms-consultas
-export const fetchPlatosPopulares = async (limit=5) => {
-  const r = await fetchAuth(`${BASE_URL}/api/analitica/platos-populares?limit=${limit}`);
+export const fetchVentasRestaurante = async (limit=5) => {
+  const r = await fetchAuth(`${BASE_URL}/api/analitica/ventas-restaurante?limit=${limit}`);
   return r.json();
 };
-export const fetchVentasMensuales = async () => {
-  const r = await fetchAuth(`${BASE_URL}/api/analitica/ventas-mensuales`);
+export const fetchUsuariosFrecuentes = async (limit=5) => {
+  const r = await fetchAuth(`${BASE_URL}/api/analitica/usuarios-frecuentes?limit=${limit}`);
   return r.json();
 };

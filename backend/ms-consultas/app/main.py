@@ -91,41 +91,34 @@ def run_athena_query(query: str):
 def health_check():
     return {"status": "UP"}
 
-@app.get("/api/analitica/platos-populares")
-def obtener_platos_populares(limit: int = Query(default=10, ge=1, le=50)):
+@app.get("/api/analitica/ventas-restaurante")
+def obtener_ventas_restaurante(limit: int = Query(default=10, ge=1, le=50)):
     """
-    Método REST 1: Reporte de Platos más vendidos por Distrito y Rango de Edad
-    (Requerimiento directo para la pantalla de la App Web en React)
+    Método REST 1: Ventas por Restaurante (vista_ventas_restaurante)
     """
     query = f"""
-    SELECT 
-        name AS plato,
-        SUM(quantity) AS total_ventas
-    FROM cloudeats_glue_db.order_items
-    GROUP BY 1
+    SELECT *
+    FROM {ATHENA_DATABASE}.vista_ventas_restaurante
     ORDER BY total_ventas DESC
     LIMIT {limit};
     """
     return {
-        "reporte": "Estadistica de Platos mas vendidos",
+        "reporte": "Ventas por Restaurante",
         "data": run_athena_query(query)
     }
 
-@app.get("/api/analitica/ventas-mensuales")
-def obtener_ventas_mensuales():
+@app.get("/api/analitica/usuarios-frecuentes")
+def obtener_usuarios_frecuentes(limit: int = Query(default=10, ge=1, le=50)):
     """
-    Método REST 2: Consolidado de ventas globales acumuladas por mes
+    Método REST 2: Usuarios Frecuentes (vista_usuarios_frecuentes)
     """
-    query = """
-    SELECT 
-        substr(created_at, 1, 7) AS mes,
-        SUM(total) AS total_recaudado,
-        COUNT(id) AS cantidad_pedidos
-    FROM cloudeats_glue_db.pedidos
-    GROUP BY 1
-    ORDER BY mes DESC;
+    query = f"""
+    SELECT *
+    FROM {ATHENA_DATABASE}.vista_usuarios_frecuentes
+    ORDER BY numero_pedidos DESC
+    LIMIT {limit};
     """
     return {
-        "reporte": "Resumen de ventas mensuales",
+        "reporte": "Usuarios Frecuentes",
         "data": run_athena_query(query)
     }
