@@ -37,8 +37,8 @@ const Dashboard = ({ user }) => {
           <p style={{fontSize:'0.9rem', marginBottom:'16px'}}>Reporte analítico de Platos Populares.</p>
           {athena && athena.length > 0 ? athena.map((row, i) => (
              <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border-color)'}}>
-               <span>{row.dish_name || 'Desconocido'}</span>
-               <span style={{fontWeight:'bold'}}>{row.total_vendidos || 0} ventas</span>
+               <span>{row.plato || row.nombre_plato || 'Desconocido'}</span>
+               <span style={{fontWeight:'bold'}}>{row.total_ventas || 0} ventas</span>
              </div>
           )) : <p>Cargando modelo analítico...</p>}
         </div>
@@ -49,7 +49,7 @@ const Dashboard = ({ user }) => {
           {ventas && ventas.length > 0 ? ventas.map((row, i) => (
              <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border-color)'}}>
                <span>Mes {row.mes}</span>
-               <span style={{fontWeight:'bold'}}>S/ {row.total_mes || 0}</span>
+               <span style={{fontWeight:'bold'}}>S/ {row.total_recaudado || 0}</span>
              </div>
           )) : <p>Cargando modelo analítico...</p>}
         </div>
