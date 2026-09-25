@@ -37,32 +37,36 @@ def execute_query(query, wait=True):
 execute_query(f"CREATE DATABASE IF NOT EXISTS {db_name}")
 
 # 2. Crear las 4 tablas (SQL) apuntando directamente a S3 (Reemplaza a los crawlers de Glue)
+execute_query(f"DROP TABLE IF EXISTS {db_name}.usuarios")
 query_users = f"""
-CREATE EXTERNAL TABLE IF NOT EXISTS {db_name}.usuarios (
+CREATE EXTERNAL TABLE {db_name}.usuarios (
   id int, nombre string, apellido string, email string, password string, created_at string
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE
 LOCATION 's3://{bucket_name}/raw/usuarios/' tblproperties ("skip.header.line.count"="1");
 """
 execute_query(query_users)
 
+execute_query(f"DROP TABLE IF EXISTS {db_name}.pedidos")
 query_orders = f"""
-CREATE EXTERNAL TABLE IF NOT EXISTS {db_name}.pedidos (
+CREATE EXTERNAL TABLE {db_name}.pedidos (
   id int, user_id string, restaurant_id string, subtotal double, delivery_fee double, total double, address string, status string, created_at string
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE
 LOCATION 's3://{bucket_name}/raw/orders/' tblproperties ("skip.header.line.count"="1");
 """
 execute_query(query_orders)
 
+execute_query(f"DROP TABLE IF EXISTS {db_name}.order_items")
 query_items = f"""
-CREATE EXTERNAL TABLE IF NOT EXISTS {db_name}.order_items (
+CREATE EXTERNAL TABLE {db_name}.order_items (
   id int, order_id int, dish_id string, name string, quantity int, price double, qty int
 ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE
 LOCATION 's3://{bucket_name}/raw/order_items/' tblproperties ("skip.header.line.count"="1");
 """
 execute_query(query_items)
 
+execute_query(f"DROP TABLE IF EXISTS {db_name}.catalogo")
 query_catalogo = f"""
-CREATE EXTERNAL TABLE IF NOT EXISTS {db_name}.catalogo (
+CREATE EXTERNAL TABLE {db_name}.catalogo (
   id int, nombre string, distrito string, platos array<struct<id:int, nombre:string, precio:double>>
 ) ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 LOCATION 's3://{bucket_name}/raw/catalogo/';
