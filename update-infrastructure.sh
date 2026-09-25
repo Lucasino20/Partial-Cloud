@@ -10,7 +10,6 @@ BACKEND_IDS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=MV-Back
 
 if [ -n "$BACKEND_IDS" ] && [ "$BACKEND_IDS" != "None" ]; then
     for ID in $BACKEND_IDS; do
-        # AWS SSM (Systems Manager) permite ejecutar comandos en las MVs sin usar SSH
         aws ssm send-command --instance-ids $ID --document-name "AWS-RunShellScript" \
             --parameters 'commands=["sudo systemctl stop apache2 || true", "sudo systemctl disable apache2 || true", "cd /home/ubuntu/app", "sudo -u ubuntu git pull", "S3_B=\$(aws s3api list-buckets --query \"Buckets[?starts_with(Name, \\\"cloudeats\\\")].Name\" --output text | awk \"{print \\$1}\")", "if [ -z \"\$S3_B\" ]; then S3_B=\"cloudeats-datalake-lucas2026\"; fi", "sed -i \"s|ATHENA_S3_OUTPUT=.*|ATHENA_S3_OUTPUT=s3://\$S3_B/athena-results/|g\" backend/.env", "sed -i \"s|ATHENA_DATABASE=.*|ATHENA_DATABASE=cloudeats_glue_db|g\" backend/.env", "sudo docker compose -f backend/docker-compose.yml up -d --build"]' > /dev/null
         echo "✅ Comando de actualización enviado al Backend ($ID)"
@@ -24,7 +23,7 @@ INGESTA_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=MV-Inges
 
 if [ -n "$INGESTA_ID" ] && [ "$INGESTA_ID" != "None" ]; then
     aws ssm send-command --instance-ids $INGESTA_ID --document-name "AWS-RunShellScript" \
-        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git pull", "S3_B=\$(grep S3_BUCKET data-science/.env | cut -d \\"=\\" -f2)", "aws s3 rm s3://\$S3_B/raw/ --recursive", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate"]' > /dev/null
+        --parameters 'commands=["cd /home/ubuntu/app", "sudo -u ubuntu git pull", "DB_IP=\$(grep DB_IP data-science/.env | cut -d \\"=\\" -f2)", "sudo docker run --rm -v /home/ubuntu/app/backend/scripts:/scripts -w /scripts -e DB_HOST=\$DB_IP python:3.10-slim bash -c \"pip install faker psycopg2-binary mysql-connector-python pymongo && python seed_fake_data.py\"", "S3_B=\$(grep S3_BUCKET data-science/.env | cut -d \\"=\\" -f2)", "aws s3 rm s3://\$S3_B/raw/ --recursive", "sudo docker compose -f data-science/docker-compose.yml up -d --build --force-recreate"]' > /dev/null
     echo "✅ Comando de actualización enviado a la Ingesta ($INGESTA_ID)"
 else
     echo "⚠️ No se encontró la instancia de Ingesta."
