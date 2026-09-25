@@ -43,6 +43,9 @@ if [ "$APP_ID" == "None" ] || [ -z "$APP_ID" ]; then
     aws amplify create-branch --app-id $APP_ID --branch-name main > /dev/null
 fi
 
+# Configurar reglas de reescritura para React Router (SPA) para evitar errores 404
+aws amplify update-app --app-id $APP_ID --custom-rules '[{"source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>", "target": "/index.html", "status": "200"}]' > /dev/null
+
 # Generamos una URL firmada (Presigned URL) para evitar errores de permisos "UnauthorizedException"
 PRESIGNED_URL=$(aws s3 presign s3://$TEMP_BUCKET/dist.zip --expires-in 600)
 
