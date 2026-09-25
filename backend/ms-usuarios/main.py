@@ -24,9 +24,18 @@ def root():
 def health_check():
     return {"status": "UP"}
 
-models.Base.metadata.create_all(bind=database.engine)
+try:
+    models.Base.metadata.create_all(bind=database.engine)
+    db_status = "Connected"
+except Exception as e:
+    db_status = str(e)
+
+@app.get("/debug-db")
+def debug_db():
+    return {"db_status": db_status}
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 SECRET_KEY = "tu_secreto_super_seguro"
 ALGORITHM = "HS256"
 
