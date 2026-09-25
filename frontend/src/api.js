@@ -1,6 +1,21 @@
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost';
 
+const getAuthToken = () => {
+  const token = localStorage.getItem('cloudeats_token');
+  return token ? `Bearer ${token}` : '';
+};
+
+const fetchAuth = async (url, options = {}) => {
+  const headers = { ...options.headers };
+  const auth = getAuthToken();
+  if (auth) {
+    headers['Authorization'] = auth;
+  }
+  const r = await fetch(url, { ...options, headers });
+  return r;
+};
+
 // ms-usuarios
 export const login = async (credentials) => {
   const r = await fetch(`${BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) });
@@ -16,63 +31,67 @@ export const registerUser = async (userData) => {
   return r.json();
 };
 export const fetchUsuarios = async () => {
-  const r = await fetch(`${BASE_URL}/usuarios`);
+  const r = await fetchAuth(`${BASE_URL}/usuarios`);
+  return r.json();
+};
+export const fetchUsuarioById = async (userId) => {
+  const r = await fetchAuth(`${BASE_URL}/usuarios/${userId}`);
   return r.json();
 };
 
 // ms-catalogo
 export const fetchRestaurantes = async () => {
-  const r = await fetch(`${BASE_URL}/api/restaurantes`);
+  const r = await fetchAuth(`${BASE_URL}/api/restaurantes`);
   return r.json();
 };
 export const fetchPlato = async (dishId) => {
-  const r = await fetch(`${BASE_URL}/api/restaurantes/platos/${dishId}`);
+  const r = await fetchAuth(`${BASE_URL}/api/restaurantes/platos/${dishId}`);
   return r.json();
 };
 export const createRestaurant = async (data) => {
-  const r = await fetch(`${BASE_URL}/api/restaurantes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  const r = await fetchAuth(`${BASE_URL}/api/restaurantes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   return r.json();
 };
 
 // ms-pedidos
 export const fetchMisPedidos = async (userId) => {
-  const r = await fetch(`${BASE_URL}/orders/user/${userId}`);
+  const r = await fetchAuth(`${BASE_URL}/orders/user/${userId}`);
   return r.json();
 };
 export const createOrder = async (orderData) => {
-  const r = await fetch(`${BASE_URL}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
+  const r = await fetchAuth(`${BASE_URL}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
   if(!r.ok) throw new Error("Error creando orden");
   return r.json();
 };
 export const fetchAllOrders = async () => {
-  const r = await fetch(`${BASE_URL}/orders`);
+  const r = await fetchAuth(`${BASE_URL}/orders`);
   return r.json();
 };
 export const fetchOrderById = async (id) => {
-  const r = await fetch(`${BASE_URL}/orders/${id}`);
+  const r = await fetchAuth(`${BASE_URL}/orders/${id}`);
   return r.json();
 };
 export const deleteOrder = async (id) => {
-  const r = await fetch(`${BASE_URL}/orders/${id}`, { method: 'DELETE' });
+  const r = await fetchAuth(`${BASE_URL}/orders/${id}`, { method: 'DELETE' });
   return r.json();
 };
 export const updateOrderStatus = async (id, status) => {
-  const r = await fetch(`${BASE_URL}/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+  const r = await fetchAuth(`${BASE_URL}/orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
   return r.json();
 };
 
 // ms-historial
 export const fetchDashboard = async (userId) => {
-  const r = await fetch(`${BASE_URL}/api/dashboard?userId=${userId}`);
+  const r = await fetchAuth(`${BASE_URL}/api/dashboard?userId=${userId}`);
   return r.json();
 };
 
 // ms-consultas
 export const fetchPlatosPopulares = async (limit=5) => {
-  const r = await fetch(`${BASE_URL}/api/analitica/platos-populares?limit=${limit}`);
+  const r = await fetchAuth(`${BASE_URL}/api/analitica/platos-populares?limit=${limit}`);
   return r.json();
 };
 export const fetchVentasMensuales = async () => {
-  const r = await fetch(`${BASE_URL}/api/analitica/ventas-mensuales`);
+  const r = await fetchAuth(`${BASE_URL}/api/analitica/ventas-mensuales`);
   return r.json();
 };

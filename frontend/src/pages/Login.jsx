@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login, fetchUsuarios, registerUser } from '../api';
+import { login, fetchUsuarios, registerUser, fetchUsuarioById } from '../api';
 
 const Login = ({ onLogin }) => {
   const [isRegister, setIsRegister] = useState(false);
@@ -20,10 +20,11 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     setLoading(true); setError(''); setSuccess('');
     try {
-      await login({ email, password });
-      const allUsers = await fetchUsuarios();
-      const me = allUsers.find(u => u.email === email);
-      if(!me) throw new Error("Usuario no encontrado en la DB");
+      const resp = await login({ email, password });
+      localStorage.setItem('cloudeats_token', resp.access_token);
+      
+      const me = await fetchUsuarioById(resp.user_id);
+      
       onLogin(me);
     } catch(err) {
       setError(err.message || 'Error al iniciar sesión');

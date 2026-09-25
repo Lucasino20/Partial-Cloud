@@ -13,7 +13,7 @@ const Navbar = ({ user, onLogout }) => {
         <Link to="/restaurantes">Restaurantes</Link>
         <Link to="/pedidos">Mis Pedidos</Link>
         <Link to="/dashboard">Dashboard</Link>
-        {user.rol === 'admin' && (
+        {user.role === 'admin' && (
           <Link to="/admin" style={{color: '#3b82f6'}}>Admin Panel</Link>
         )}
       </div>
