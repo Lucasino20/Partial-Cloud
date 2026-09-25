@@ -78,7 +78,7 @@ view_1 = f"""
 CREATE OR REPLACE VIEW {db_name}.vista_ventas_restaurante AS
 SELECT c.nombre AS restaurante, SUM(p.total) AS total_ventas, COUNT(p.id) AS total_pedidos
 FROM {db_name}.pedidos p
-JOIN {db_name}.catalogo c ON p.restaurant_id = c.id
+JOIN {db_name}.catalogo c ON p.restaurant_id = CAST(c.id AS VARCHAR)
 GROUP BY c.nombre;
 """
 execute_query(view_1)
@@ -87,7 +87,7 @@ view_2 = f"""
 CREATE OR REPLACE VIEW {db_name}.vista_usuarios_frecuentes AS
 SELECT u.nombre, u.email, COUNT(p.id) AS numero_pedidos
 FROM {db_name}.usuarios u
-JOIN {db_name}.pedidos p ON u.id = p.user_id
+JOIN {db_name}.pedidos p ON CAST(u.id AS VARCHAR) = p.user_id
 GROUP BY u.nombre, u.email
 ORDER BY numero_pedidos DESC;
 """
