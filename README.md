@@ -9,17 +9,17 @@ El proyecto está dividido en tres áreas principales organizadas en carpetas:
 
 ### 1. `backend/` (Microservicios)
 Contiene 5 microservicios dockerizados y un API Gateway (Nginx). Cumple con el requisito de usar 3 lenguajes de programación distintos:
-- **`ms-usuarios`**: Python (FastAPI) + MySQL. Gestiona autenticación y perfiles de usuario.
-- **`ms-pedidos`**: Node.js (Express) + PostgreSQL. Gestiona la creación de órdenes de comida.
-- **`ms-catalogo`**: Java (Spring Boot) + MongoDB. Administra los restaurantes y platos (reescrito para cumplir rúbrica de 3 lenguajes).
-- **`ms-historial`**: Python (FastAPI). No tiene base de datos. Consume datos de los otros microservicios mediante HTTPX para armar un dashboard general.
-- **`ms-consultas`**: Python (FastAPI). Microservicio analítico que consulta a AWS Athena mediante la librería `boto3`.
-- **`nginx/`**: Reverse Proxy que actúa como API Gateway interno exponiendo todos los servicios únicamente por el puerto 80.
+- **`ms-usuarios`**: Python (FastAPI) + MySQL. Gestiona autenticación y perfiles de usuario. Implementa RBAC (Role-Based Access Control) y generación de JWTs.
+- **`ms-pedidos`**: Node.js (Express) + PostgreSQL. Gestiona la creación de órdenes de comida. Verifica firmas JWT para asegurar que los usuarios solo vean sus propios pedidos.
+- **`ms-catalogo`**: Java (Spring Boot) + MongoDB. Administra restaurantes y platos. Incorpora soporte polimórfico para IDs (ObjectID y String/Int) y sincronización con el frontend.
+- **`ms-historial`**: Go (Fiber) + MongoDB. Consume datos de otros microservicios armando un dashboard. Protegido mediante middlewares de validación JWT.
+- **`ms-consultas`**: Python (FastAPI). Microservicio analítico que consulta a AWS Athena mediante `boto3`, extrayendo las vistas requeridas por la rúbrica.
+- **`nginx/`**: Reverse Proxy que actúa como API Gateway interno exponiendo todos los servicios por el puerto 80.
 
 ### 2. `frontend/` (AWS Amplify)
 Aplicación Single-Page Application (SPA) construida en **React + Vite**.
 - Diseño moderno estilo "App de Comida" (Rappi/PedidosYa).
-- Cumple la rúbrica al consumir los 5 microservicios mediante llamadas reales `fetch()` (mínimo 2 endpoints por servicio).
+- Cumple la rúbrica al consumir los 5 microservicios mediante llamadas reales `fetch()` e inyecta automáticamente tokens JWT de autorización (`fetchAuth`).
 - Se configura automáticamente para entornos locales o producción mediante la variable de entorno `VITE_API_URL`.
 
 ### 3. `data-science/` (Ingesta y Analytics)
@@ -74,8 +74,8 @@ La siguiente lista corresponde a las rutas implementadas actualmente en el códi
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `GET` | `/health` | Verifica que el servicio esté activo. |
-| `GET` | `/api/analitica/platos-populares?limit={limit}` | Reporte de platos populares. |
-| `GET` | `/api/analitica/ventas-mensuales` | Reporte consolidado de ventas por mes. |
+| `GET` | `/api/analitica/ventas-restaurante?limit={limit}` | Vista Analítica 1: Reporte de ventas totales por Restaurante. |
+| `GET` | `/api/analitica/usuarios-frecuentes?limit={limit}` | Vista Analítica 2: Reporte de usuarios con mayor cantidad de pedidos. |
 | `GET` | `/docs` | Swagger UI. |
 
 ---
@@ -117,3 +117,74 @@ Si en el futuro modificas código del Frontend, Backend, Ingesta o Athena, **no 
    bash update-infrastructure.sh
    ```
 Este script actualizará remotamente el código en todas las instancias EC2, reconstruirá los contenedores de Docker (Zero-Downtime), actualizará las consultas de Athena e incluso recompilará tu frontend automáticamente.
+
+---
+
+## Diagrama de Arquitectura de Solución (Para la Rúbrica)
+
+Puedes generar el diagrama requerido para la presentación usando este código [Mermaid](https://mermaid.live). Cópialo y pégalo en cualquier visor de Markdown o en Notion:
+
+```mermaid
+graph TD
+    %% Frontend and Entry
+    User[Usuario Final] -->|HTTPS| Frontend[AWS Amplify - React/Vite]
+    User -->|HTTP API| ALB[AWS Application Load Balancer]
+    
+    %% API Gateway
+    ALB -->|Ruteo| Nginx1[Nginx API Gateway]
+    ALB -->|Ruteo| Nginx2[Nginx API Gateway]
+    
+    %% Microservicios (Backend EC2)
+    subgraph "Instancias Backend (Auto Scaling)"
+        Nginx1 --> MU[ms-usuarios : FastAPI]
+        Nginx1 --> MP[ms-pedidos : Express]
+        Nginx1 --> MC[ms-catalogo : Spring Boot]
+        Nginx1 --> MH[ms-historial : Go/Fiber]
+        Nginx1 --> MCo[ms-consultas : FastAPI]
+        
+        %% Validacion JWT Cross-Service
+        MH -.->|Verifica JWT| MU
+        MP -.->|Verifica JWT| MU
+    end
+    
+    %% Bases de Datos (DB EC2)
+    subgraph "Instancia Bases de Datos"
+        MU --> DB_U[(MySQL : users)]
+        MP --> DB_P[(PostgreSQL : orders)]
+        MC --> DB_C[(MongoDB : restaurants)]
+    end
+    
+    %% Integracion de Historial
+    MH -->|HTTP GET| MP
+    MH -->|HTTP GET| MC
+    
+    %% Data Science Pipeline
+    subgraph "Instancia Ingesta (Cron Jobs)"
+        Ing_U[ingesta-usuarios : Pandas]
+        Ing_P[ingesta-pedidos : Pandas]
+        Ing_C[ingesta-catalogo : Pandas]
+        
+        %% Extract
+        DB_U -.->|Extract| Ing_U
+        DB_P -.->|Extract| Ing_P
+        DB_C -.->|Extract| Ing_C
+    end
+    
+    %% Datalake and Analytics
+    subgraph "AWS Analytics Serverless"
+        S3[(AWS S3 Datalake)]
+        Glue[[AWS Glue Data Catalog]]
+        Athena((AWS Athena))
+        
+        %% Load
+        Ing_U -->|Upload CSV| S3
+        Ing_P -->|Upload CSV| S3
+        Ing_C -->|Upload JSON| S3
+        
+        S3 -.->|Schema| Glue
+        Glue -.->|Query| Athena
+    end
+    
+    %% Consultas
+    MCo -->|Boto3 Query| Athena
+```
