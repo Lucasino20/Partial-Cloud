@@ -2,7 +2,7 @@ import boto3
 import time
 import os
 
-bucket_name = os.getenv('S3_BUCKET')
+bucket_name = os.getenv('S3_BUCKET', '').lower()
 region = os.getenv('AWS_REGION', 'us-east-1')
 
 print("Configurando AWS Glue y Athena automáticamente...")
