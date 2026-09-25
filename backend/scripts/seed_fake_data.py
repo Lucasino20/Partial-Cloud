@@ -20,7 +20,7 @@ try:
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             nombre VARCHAR(100), apellido VARCHAR(100), email VARCHAR(100),
-            password VARCHAR(100), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            telefono VARCHAR(20), password VARCHAR(100), role VARCHAR(20) DEFAULT 'cliente', restaurant_id VARCHAR(50) DEFAULT NULL
         )
     """)
     # Check if data already exists
@@ -29,8 +29,8 @@ try:
         users_data = []
         print("Generando 5,000 usuarios...")
         for _ in range(5000):
-            users_data.append((fake.first_name(), fake.last_name(), fake.unique.email(), "hash123"))
-        cursor_mysql.executemany("INSERT INTO users (nombre, apellido, email, password) VALUES (%s, %s, %s, %s)", users_data)
+            users_data.append((fake.first_name(), fake.last_name(), fake.unique.email(), fake.phone_number(), "hash123", "cliente"))
+        cursor_mysql.executemany("INSERT INTO users (nombre, apellido, email, telefono, password, role) VALUES (%s, %s, %s, %s, %s, %s)", users_data)
         conn_mysql.commit()
         print("✅ 5,000 usuarios insertados en MySQL")
     else:

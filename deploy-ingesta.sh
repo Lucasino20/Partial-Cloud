@@ -28,13 +28,16 @@ sudo ./aws/install --update || true
 # Intentar crear el bucket. Si ya existe y es tuyo, el || true evitará que falle el script.
 aws s3 mb s3://${S3_BUCKET} --region us-east-1 || echo "El bucket ya existe o no se pudo crear (podría ser por permisos). Continuando..."
 
-echo "[3/4] Configurando variables de entorno..."
+echo "[3/5] Configurando variables de entorno..."
 cat <<EOF > .env
 DB_IP=${DB_IP}
 S3_BUCKET=${S3_BUCKET}
 EOF
 
-echo "[3/3] Construyendo y ejecutando contenedores de extracción a S3..."
+echo "[4/5] Inyectando 20,000+ registros de Fake Data antes de la extracción..."
+sudo docker run --rm -v $(pwd)/../backend/scripts:/scripts -w /scripts -e DB_HOST=${DB_IP} python:3.10-slim bash -c "pip install faker psycopg2-binary mysql-connector-python pymongo && python seed_fake_data.py"
+
+echo "[5/5] Construyendo y ejecutando contenedores de extracción a S3..."
 sudo docker compose build
 sudo docker compose up -d
 
