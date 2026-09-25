@@ -22,6 +22,12 @@ sudo systemctl enable docker
 cd backend
 
 echo "[2/4] Configurando entorno..."
+# Encontramos el bucket S3 (si no se pasó como parámetro, buscamos uno que empiece con cloudeats)
+S3_BUCKET=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'cloudeats')].Name" --output text | awk '{print $1}')
+if [ -z "$S3_BUCKET" ] || [ "$S3_BUCKET" == "None" ]; then
+    S3_BUCKET="cloudeats-datalake-lucas2026"
+fi
+
 cat <<EOF > .env
 DATABASE_URL=mysql+pymysql://root:utec@${DB_IP}:3306/mydb
 MONGO_URI=mongodb://root:utec@${DB_IP}:27017/cloudeats_catalogo?authSource=admin
@@ -34,8 +40,8 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_SESSION_TOKEN=
-ATHENA_S3_OUTPUT=
-ATHENA_DATABASE=
+ATHENA_S3_OUTPUT=s3://${S3_BUCKET}/athena-results/
+ATHENA_DATABASE=cloudeats_glue_db
 EOF
 
 echo "[3/4] Construyendo contenedores..."

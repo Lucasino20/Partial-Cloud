@@ -22,7 +22,8 @@ def main():
         filename = f"catalogo_{timestamp}.json"
         
         with open(filename, 'w') as f:
-            json.dump(data, f)
+            for record in data:
+                f.write(json.dumps(record) + '\n')
             
         print(f"Extraídos {len(data)} restaurantes. Guardado en {filename}")
             
